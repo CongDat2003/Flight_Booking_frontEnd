@@ -1,0 +1,40 @@
+<resources>
+    <style name="SeatButtonBusiness">
+        <item name="android:layout_width">36dp</item>
+        <item name="android:layout_height">36dp</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:background">@drawable/seat_available</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="SeatButtonBusiness.Selected">
+        <item name="android:background">@drawable/seat_selected</item>
+    </style>
+
+    <style name="SeatButtonBusiness.Unavailable">
+        <item name="android:background">@drawable/seat_unavailable</item>
+        <item name="android:textColor">#999999</item>
+    </style>
+
+    <style name="SeatButtonEconomy">
+        <item name="android:layout_width">30dp</item>
+        <item name="android:layout_height">30dp</item>
+        <item name="android:textSize">9sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:background">@drawable/seat_available</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="SeatButtonEconomy.Selected">
+        <item name="android:background">@drawable/seat_selected</item>
+    </style>
+
+    <style name="SeatButtonEconomy.Unavailable">
+        <item name="android:background">@drawable/seat_unavailable</item>
+        <item name="android:textColor">#999999</item>
+    </style>
+
+</resources>

@@ -1,0 +1,67 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Map/Route background -->
+    <path
+        android:fillColor="#E3F2FD"
+        android:pathData="M3,4h18c1.1,0 2,0.9 2,2v12c0,1.1 -0.9,2 -2,2H3c-1.1,0 -2,-0.9 -2,-2V6c0,-1.1 0.9,-2 2,-2z"/>
+
+    <!-- Route line -->
+    <path
+        android:strokeColor="#2196F3"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M4,12c2,-2 4,-1 6,0s4,2 6,0c2,-2 4,-1 6,0"/>
+
+    <!-- Location pin 1 -->
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M6,8c0,-1.1 0.9,-2 2,-2s2,0.9 2,2c0,1.1 -1.3,3 -2,3S6,9.1 6,8z"/>
+    <!-- Circle converted to path: center (8,8), radius 0.5 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M8,7.5c0.28,0 0.5,0.22 0.5,0.5s-0.22,0.5 -0.5,0.5s-0.5,-0.22 -0.5,-0.5s0.22,-0.5 0.5,-0.5z"/>
+
+    <!-- Location pin 2 -->
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M16,8c0,-1.1 0.9,-2 2,-2s2,0.9 2,2c0,1.1 -1.3,3 -2,3S16,9.1 16,8z"/>
+    <!-- Circle converted to path: center (18,8), radius 0.5 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18,7.5c0.28,0 0.5,0.22 0.5,0.5s-0.22,0.5 -0.5,0.5s-0.5,-0.22 -0.5,-0.5s0.22,-0.5 0.5,-0.5z"/>
+
+    <!-- AI brain/circuit element -->
+    <!-- Circle converted to path: center (12,16), radius 3 -->
+    <path
+        android:fillColor="#9C27B0"
+        android:pathData="M12,13c1.66,0 3,1.34 3,3s-1.34,3 -3,3s-3,-1.34 -3,-3s1.34,-3 3,-3z"/>
+
+    <!-- AI circuit patterns -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10.5,15h3v1h-3v-1z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M11,14h2v1h-2v-1z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M11,17h2v1h-2v-1z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10,15c0.28,0 0.5,0.22 0.5,0.5s-0.22,0.5 -0.5,0.5s-0.5,-0.22 -0.5,-0.5s0.22,-0.5 0.5,-0.5z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14,15c0.28,0 0.5,0.22 0.5,0.5s-0.22,0.5 -0.5,0.5s-0.5,-0.22 -0.5,-0.5s0.22,-0.5 0.5,-0.5z"/>
+
+    <!-- Sparkle effect for AI -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M9,13l0.5,-1.5L11,11l-1.5,-0.5L9,9l-0.5,1.5L7,11l1.5,0.5L9,13z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M15,19l0.3,-0.9L16.2,17.7l-0.9,-0.3L15,16.5l-0.3,0.9L13.8,17.7l0.9,0.3L15,19z"/>
+</vector>

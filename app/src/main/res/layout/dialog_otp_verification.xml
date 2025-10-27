@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center_horizontal">
+
+    <ImageView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@drawable/ic_otp_dialog"
+        android:contentDescription="OTP Icon"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Xác thực OTP"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#1A1A1A"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Vui lòng nhập mã OTP gồm 6 chữ số đã gửi tới email của bạn."
+        android:textSize="14sp"
+        android:textColor="#666666"
+        android:gravity="center"
+        android:layout_marginBottom="24dp"/>
+
+    <com.chaos.view.PinView
+        android:id="@+id/pin_view_otp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        app:itemCount="6"
+        app:itemWidth="40dp"
+        app:itemHeight="40dp"
+        app:itemRadius="8dp"
+        app:itemSpacing="8dp"
+        app:lineWidth="2dp"
+        app:lineColor="@color/travel_orange"
+        android:cursorVisible="true"
+        android:inputType="number"
+        android:itemBackground="#ECEFF1"
+        android:textColor="#1A1A1A"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:viewType="rectangle" />
+
+    <TextView
+        android:id="@+id/tv_resend_timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gửi lại sau: 60 giây"
+        android:textColor="#666666"
+        android:textSize="14sp"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone"/>
+
+    <Button
+        android:id="@+id/btn_resend_otp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Gửi lại mã"
+        android:textColor="@color/travel_orange"
+        android:background="?attr/selectableItemBackground"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btn_verify_otp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="XÁC NHẬN OTP"
+        android:backgroundTint="@color/travel_orange"
+        android:textColor="#FFFFFF" />
+
+</LinearLayout>

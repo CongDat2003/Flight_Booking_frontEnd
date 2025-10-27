@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="100dp"
+    android:viewportWidth="200"
+    android:viewportHeight="100">
+
+    <!-- Đại lục châu Âu-châu Phi -->
+    <path
+        android:fillColor="#40FFFFFF"
+        android:pathData="M20,30 L35,25 L40,35 L35,45 L25,50 L15,45 Z" />
+
+    <!-- Đại lục châu Á -->
+    <path
+        android:fillColor="#40FFFFFF"
+        android:pathData="M60,20 L80,15 L90,25 L85,35 L75,40 L65,35 L55,30 Z" />
+
+    <!-- Đại lục châu Mỹ -->
+    <path
+        android:fillColor="#40FFFFFF"
+        android:pathData="M120,25 L135,20 L140,30 L135,40 L125,45 L115,40 L110,30 Z" />
+
+    <!-- Đại lục châu Úc -->
+    <path
+        android:fillColor="#40FFFFFF"
+        android:pathData="M160,55 L175,50 L180,60 L175,65 L165,70 L155,65 Z" />
+
+</vector>

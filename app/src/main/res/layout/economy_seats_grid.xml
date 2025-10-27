@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal">
+
+    <!-- Row 3 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="6dp">
+
+        <TextView style="@style/SeatButtonEconomy" android:text="A3" />
+        <TextView style="@style/SeatButtonEconomy" android:text="B3" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy.Unavailable" android:text="C3" android:layout_marginStart="4dp" />
+        <Space android:layout_width="20dp" android:layout_height="1dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="D3" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="E3" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="F3" android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+
+    <!-- Row 4 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="6dp">
+
+        <TextView style="@style/SeatButtonEconomy" android:text="A4" />
+        <TextView style="@style/SeatButtonEconomy.Unavailable" android:text="B4" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="C4" android:layout_marginStart="4dp" />
+        <Space android:layout_width="20dp" android:layout_height="1dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="D4" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="E4" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="F4" android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+
+    <!-- Row 5 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="6dp">
+
+        <TextView style="@style/SeatButtonEconomy" android:text="A5" />
+        <TextView style="@style/SeatButtonEconomy" android:text="B5" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="C5" android:layout_marginStart="4dp" />
+        <Space android:layout_width="20dp" android:layout_height="1dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="D5" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="E5" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="F5" android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+
+    <!-- Row 6 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="6dp">
+
+        <TextView style="@style/SeatButtonEconomy" android:text="A6" />
+        <TextView style="@style/SeatButtonEconomy" android:text="B6" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy.Selected" android:text="C6" android:layout_marginStart="4dp" />
+        <Space android:layout_width="20dp" android:layout_height="1dp" />
+        <TextView style="@style/SeatButtonEconomy.Selected" android:text="D6" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy.Unavailable" android:text="E6" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="F6" android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+
+    <!-- Row 7 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="6dp">
+
+        <TextView style="@style/SeatButtonEconomy.Unavailable" android:text="A7" />
+        <TextView style="@style/SeatButtonEconomy" android:text="B7" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy.Selected" android:text="C7" android:layout_marginStart="4dp" />
+        <Space android:layout_width="20dp" android:layout_height="1dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="D7" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="E7" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="F7" android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+
+    <!-- Row 8 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="6dp">
+
+        <TextView style="@style/SeatButtonEconomy" android:text="A8" />
+        <TextView style="@style/SeatButtonEconomy" android:text="B8" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="C8" android:layout_marginStart="4dp" />
+        <Space android:layout_width="20dp" android:layout_height="1dp" />
+        <TextView style="@style/SeatButtonEconomy.Unavailable" android:text="D8" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="E8" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="F8" android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+
+    <!-- Row 9 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView style="@style/SeatButtonEconomy" android:text="A9" />
+        <TextView style="@style/SeatButtonEconomy" android:text="B9" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="C9" android:layout_marginStart="4dp" />
+        <Space android:layout_width="20dp" android:layout_height="1dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="D9" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy" android:text="E9" android:layout_marginStart="4dp" />
+        <TextView style="@style/SeatButtonEconomy.Unavailable" android:text="F9" android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

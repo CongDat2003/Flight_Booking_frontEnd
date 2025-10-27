@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5">
+
+    <!-- Header -->
+    <RelativeLayout
+        android:id="@+id/header_choose_seats"
+        android:layout_width="0dp"
+        android:layout_height="150dp"
+        android:background="@drawable/travel_scene_bg"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="40dp"
+            android:background="@drawable/circle_orange"
+            android:src="@drawable/ic_arrow_back"
+            android:contentDescription="Back"
+            android:scaleType="centerInside" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="45dp"
+            android:text="Chọn Hạng Ghế"
+            android:textColor="#000000"
+            android:textSize="34sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:layout_alignParentBottom="true"
+            android:src="@drawable/world_map_pattern"
+            android:scaleType="centerCrop"
+            android:alpha="0.3" />
+
+    </RelativeLayout>
+
+    <!-- Main Content -->
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/header_choose_seats"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottom_section">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Flight Info -->
+            <TextView
+                android:id="@+id/tv_flight_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chuyến bay: Đang tải..."
+                android:textSize="16sp"
+                android:textColor="#1A1A1A"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Seat Class Selection -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_seat_class"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Chọn hạng ghế"
+                app:boxBackgroundMode="outline"
+                app:boxStrokeColor="@color/travel_orange"
+                app:hintTextColor="@color/travel_orange"
+                android:layout_marginBottom="16dp">
+
+                <Spinner
+                    android:id="@+id/spinner_seat_class"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="12dp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Seat Class Price -->
+            <TextView
+                android:id="@+id/tv_seat_class_price"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Giá: N/A"
+                android:textSize="16sp"
+                android:textColor="#1A1A1A"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Passenger Count -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Số lượng hành khách"
+                app:boxBackgroundMode="outline"
+                app:boxStrokeColor="@color/travel_orange"
+                app:hintTextColor="@color/travel_orange"
+                android:layout_marginBottom="16dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_passenger_count"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:imeOptions="actionDone"
+                    android:padding="12dp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Passenger Details -->
+            <LinearLayout
+                android:id="@+id/ll_passenger_details"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="20dp" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!-- Bottom Section -->
+    <LinearLayout
+        android:id="@+id/bottom_section"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#FFFFFF"
+        android:padding="20dp"
+        android:elevation="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <Button
+            android:id="@+id/btn_confirm_seats"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Tiếp Tục"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:background="@drawable/btn_confirm_blue"
+            android:elevation="2dp" />
+
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
