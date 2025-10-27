@@ -277,10 +277,15 @@ public class BookingDetailActivity extends AppCompatActivity {
                 notesRow.createCell(1).setCellValue(currentBookingDetail.getNotes());
             }
             
-            // Tự động điều chỉnh độ rộng cột
-            for (int i = 0; i < 5; i++) {
-                sheet.autoSizeColumn(i);
-            }
+            // Tự động điều chỉnh độ rộng cột (loại bỏ autoSizeColumn để tránh lỗi)
+            // sheet.autoSizeColumn(i); // Gây lỗi NoClassDefFoundError trên Android
+            
+            // Thiết lập độ rộng cột thủ công
+            sheet.setColumnWidth(0, 20 * 256); // Cột 1: 20 ký tự
+            sheet.setColumnWidth(1, 30 * 256); // Cột 2: 30 ký tự
+            sheet.setColumnWidth(2, 15 * 256); // Cột 3: 15 ký tự
+            sheet.setColumnWidth(3, 15 * 256); // Cột 4: 15 ký tự
+            sheet.setColumnWidth(4, 20 * 256); // Cột 5: 20 ký tự
             
             // Lưu file vào thư mục Downloads công khai
             String fileName = "Booking_" + currentBookingDetail.getBookingReference() + ".xlsx";

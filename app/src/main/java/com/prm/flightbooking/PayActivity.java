@@ -1,8 +1,11 @@
 package com.prm.flightbooking;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -21,9 +24,13 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.prm.flightbooking.api.ApiServiceProvider;
 import com.prm.flightbooking.api.BookingApiEndpoint;
+import com.prm.flightbooking.api.PaymentApiEndpoint;
 import com.prm.flightbooking.dto.booking.BookingDetailDto;
 import com.prm.flightbooking.dto.booking.FlightDetailDto;
 import com.prm.flightbooking.dto.booking.PassengerSeatDto;
+import com.prm.flightbooking.dto.payment.CreatePaymentDto;
+import com.prm.flightbooking.dto.payment.PaymentResponseDto;
+import com.prm.flightbooking.dialogs.PaymentMethodSelectionDialog;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
@@ -48,6 +55,7 @@ public class PayActivity extends AppCompatActivity {
 
     // API service and data
     private BookingApiEndpoint bookingApi;
+    private PaymentApiEndpoint paymentApi;
     private SharedPreferences sharedPreferences;
     private int userId;
     private int bookingId;
@@ -63,6 +71,7 @@ public class PayActivity extends AppCompatActivity {
 
         // Initialize API service and SharedPreferences
         bookingApi = ApiServiceProvider.getBookingApi();
+        paymentApi = ApiServiceProvider.getPaymentApi();
         sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE);
 
         // Check login status
@@ -156,10 +165,18 @@ public class PayActivity extends AppCompatActivity {
 
     // Handle pay now button click
     private void onPayNowClick(View view) {
-        // Placeholder for payment processing
-        Toast.makeText(this, "Thanh toán ngay - Đang phát triển", Toast.LENGTH_SHORT).show();
-        // Example: Call a payment API
-        // performPayment();
+        // Show payment method selection dialog
+        PaymentMethodSelectionDialog.show(this, new PaymentMethodSelectionDialog.PaymentMethodListener() {
+            @Override
+            public void onPaymentMethodSelected(String paymentMethod) {
+                createPaymentWithMethod(paymentMethod);
+            }
+
+            @Override
+            public void onQRCodePayment() {
+                showQRCodePaymentDialog();
+            }
+        });
     }
 
     // Check login status
@@ -396,5 +413,78 @@ public class PayActivity extends AppCompatActivity {
         qr.append("62").append(String.format("%02d", addInfo.length() + 4))
                 .append("08").append(String.format("%02d", addInfo.length())).append(addInfo);
         return qr.toString();
+    }
+
+    // Create payment with selected method
+    private void createPaymentWithMethod(String paymentMethod) {
+        progressBar.setVisibility(View.VISIBLE);
+        
+        CreatePaymentDto paymentDto = new CreatePaymentDto();
+        paymentDto.setBookingId(bookingId);
+        paymentDto.setPaymentMethod(paymentMethod);
+        paymentDto.setReturnUrl("flightbooking://payment/return");
+        paymentDto.setCancelUrl("flightbooking://payment/cancel");
+        
+        Call<PaymentResponseDto> call = paymentApi.createPayment(paymentDto);
+        call.enqueue(new Callback<PaymentResponseDto>() {
+            @Override
+            public void onResponse(Call<PaymentResponseDto> call, Response<PaymentResponseDto> response) {
+                progressBar.setVisibility(View.GONE);
+                if (response.isSuccessful() && response.body() != null) {
+                    PaymentResponseDto paymentResponse = response.body();
+                    openPaymentUrl(paymentResponse.getPaymentUrl(), paymentMethod);
+                } else {
+                    Toast.makeText(PayActivity.this, "Không thể tạo thanh toán: " + response.message(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PaymentResponseDto> call, Throwable t) {
+                progressBar.setVisibility(View.GONE);
+                Toast.makeText(PayActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // Open payment URL in browser
+    private void openPaymentUrl(String paymentUrl, String paymentMethod) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(paymentUrl));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            
+            Toast.makeText(this, "Đang mở " + paymentMethod + " để thanh toán...", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Không thể mở trình duyệt để thanh toán", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Show QR Code payment dialog (existing functionality)
+    private void showQRCodePaymentDialog() {
+        // Load QR code from drawable
+        Bitmap qrCodeBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.qrcode_default);
+        if (qrCodeBitmap == null) {
+            Toast.makeText(this, "Lỗi tải mã QR ngân hàng", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Quét mã QR để thanh toán");
+        
+        ImageView qrCodeView = new ImageView(this);
+        qrCodeView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        qrCodeView.setPadding(20, 20, 20, 20);
+        qrCodeView.setImageBitmap(qrCodeBitmap);
+        builder.setView(qrCodeView);
+        
+        builder.setMessage("Vui lòng quét mã QR để chuyển khoản ngân hàng.\n\n" +
+                "Sau khi chuyển khoản thành công, vé sẽ được xác nhận tự động.");
+        builder.setPositiveButton("Đã thanh toán", (dialog, which) -> {
+            Toast.makeText(this, "Cảm ơn bạn đã thanh toán!", Toast.LENGTH_SHORT).show();
+        });
+        builder.setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
+        
+        builder.show();
     }
 }
