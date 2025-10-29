@@ -106,6 +106,12 @@
             android:name=".PayActivity"
             android:exported="false" />
 
+        <!-- Payment Result Activity -->
+        <activity
+            android:name=".PaymentResultActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
         <!-- 8. Notify - Thông báo -->
         <activity
             android:name=".NotificationActivity"
@@ -116,6 +122,9 @@
             android:name=".AIPlannerActivity"
             android:exported="false" />
 
-    </application>
+            <activity android:name=".webview.WebViewPaymentActivity"
+                android:exported="false"
+                android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        </application>
 
 </manifest>

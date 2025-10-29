@@ -15,6 +15,9 @@ public class CreatePaymentDto {
     @SerializedName("CancelUrl")
     private String cancelUrl;
 
+    @SerializedName("BankCode")
+    private String bankCode;
+
     public CreatePaymentDto() {}
 
     public CreatePaymentDto(int bookingId, String paymentMethod, String returnUrl, String cancelUrl) {
@@ -54,6 +57,14 @@ public class CreatePaymentDto {
 
     public void setCancelUrl(String cancelUrl) {
         this.cancelUrl = cancelUrl;
+    }
+
+    public String getBankCode() {
+        return bankCode;
+    }
+
+    public void setBankCode(String bankCode) {
+        this.bankCode = bankCode;
     }
 }
 
