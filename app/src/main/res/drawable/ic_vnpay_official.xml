@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+    
+    <!-- Background -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M4,4 L60,4 L60,60 L4,60 Z"/>
+    
+    <!-- V Symbol - Left blue rectangle with fingerprint -->
+    <path
+        android:fillColor="#1E40AF"
+        android:pathData="M8,12 L20,12 L20,28 L8,28 Z"/>
+    
+    <!-- V Symbol - Right red rectangle -->
+    <path
+        android:fillColor="#E53E3E"
+        android:pathData="M16,8 L28,8 L28,32 L16,32 Z"/>
+    
+    <!-- Fingerprint icon on blue rectangle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,16 A2,2 0 1,1 12,20 A2,2 0 1,1 12,16 Z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M14,18 A1,1 0 1,1 14,20 A1,1 0 1,1 14,18 Z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16,20 A1,1 0 1,1 16,22 A1,1 0 1,1 16,20 Z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18,22 A1,1 0 1,1 18,24 A1,1 0 1,1 18,22 Z"/>
+    
+    <!-- VNPAY Text -->
+    <path
+        android:fillColor="#E53E3E"
+        android:pathData="M32,16 L34,16 L34,18 L36,18 L36,16 L38,16 L38,20 L36,20 L36,18 L34,18 L34,20 L32,20 Z"/>
+    <path
+        android:fillColor="#E53E3E"
+        android:pathData="M40,16 L40,20 L42,20 L42,18 L44,18 L44,20 L46,20 L46,16 L44,16 L44,18 L42,18 L42,16 Z"/>
+    <path
+        android:fillColor="#E53E3E"
+        android:pathData="M48,16 L48,20 L50,20 L50,18 L52,18 L52,20 L54,20 L54,16 L52,16 L52,18 L50,18 L50,16 Z"/>
+    <path
+        android:fillColor="#E53E3E"
+        android:pathData="M56,16 L56,20 L58,20 L58,18 L60,18 L60,20 L62,20 L62,16 L60,16 L60,18 L58,18 L58,16 Z"/>
+    
+    <!-- MERCHANT Text -->
+    <path
+        android:fillColor="#1E40AF"
+        android:pathData="M32,24 L34,24 L34,28 L36,28 L36,24 L38,24 L38,28 L40,28 L40,24 L42,24 L42,28 L44,28 L44,24 L46,24 L46,28 L48,28 L48,24 L50,24 L50,28 L52,28 L52,24 L54,24 L54,28 L56,28 L56,24 L58,24 L58,28 L60,28 L60,24 L62,28 L62,24 Z"/>
+    
+    <!-- Wave pattern at bottom -->
+    <path
+        android:fillColor="#1E40AF"
+        android:pathData="M4,52 Q16,48 28,52 T52,52 T60,52 L60,60 L4,60 Z"/>
+    
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M4,54 Q16,50 28,54 T52,54 T60,54 L60,60 L4,60 Z"/>
+    
+    <!-- Shadow effects -->
+    <path
+        android:fillColor="#A0A0A0"
+        android:pathData="M8,14 L22,14 L22,30 L8,30 Z"/>
+    
+    <path
+        android:fillColor="#A0A0A0"
+        android:pathData="M16,10 L30,10 L30,34 L16,34 Z"/>
+</vector>

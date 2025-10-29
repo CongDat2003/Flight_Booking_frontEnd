@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+    
+    <!-- Background with VNPay brand colors -->
+    <path
+        android:fillColor="#E53E3E"
+        android:pathData="M32,4C15.43,4 2,17.43 2,34s13.43,30 30,30s30,-13.43 30,-30S48.57,4 32,4z"/>
+    
+    <!-- Inner shadow circle -->
+    <path
+        android:fillColor="#C53030"
+        android:pathData="M32,6 A26,26 0 1,1 32,58 A26,26 0 1,1 32,6 Z"/>
+    
+    <!-- VNPay text with proper typography -->
+    <!-- Letter V -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,18 L24,34 L28,18 L30,18 L26,38 L22,38 L18,18 Z"/>
+    
+    <!-- Letter N -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,18 L32,38 L34,38 L34,22 L42,38 L44,38 L44,18 L42,18 L42,34 L34,18 Z"/>
+    
+    <!-- Pay text -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M22,40 L24,40 L24,44 L26,44 L26,40 L28,40 L28,46 L22,46 Z"/>
+    
+    <!-- Decorative elements -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,18 A2,2 0 1,1 48,22 A2,2 0 1,1 48,18 Z"/>
+    
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16,46.5 A1.5,1.5 0 1,1 16,49.5 A1.5,1.5 0 1,1 16,46.5 Z"/>
+    
+    <!-- Border with subtle shadow -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#A0A0A0"
+        android:strokeWidth="1"
+        android:pathData="M32,4C15.43,4 2,17.43 2,34s13.43,30 30,30s30,-13.43 30,-30S48.57,4 32,4z"/>
+</vector>
+
