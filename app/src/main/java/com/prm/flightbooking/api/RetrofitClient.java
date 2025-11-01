@@ -18,7 +18,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient {
     private static final String ANDROID_STUDIO_BASE_URL = "http://10.0.2.2:501/api/";
     private static final String BLUESTACKS_BASE_URL = "http://10.0.2.2:501/api/";
-    private static final String REAL_IP_BASE_URL = "http://10.33.56.130:501/api/";
+    private static final String REAL_IP_BASE_URL = "http://192.168.1.7:501/api/";
     private static final String LOCALHOST_BASE_URL = "http://10.0.2.2:501/api/";
 
     private static Retrofit retrofitInstance;

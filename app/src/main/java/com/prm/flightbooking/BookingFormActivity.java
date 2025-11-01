@@ -9,19 +9,13 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,19 +27,14 @@ import androidx.core.app.NotificationCompat;
 import com.google.android.material.textfield.TextInputEditText;
 import com.prm.flightbooking.api.ApiServiceProvider;
 import com.prm.flightbooking.api.BookingApiEndpoint;
-import com.prm.flightbooking.api.PaymentApiEndpoint;
 import com.prm.flightbooking.dto.booking.BookingResponseDto;
 import com.prm.flightbooking.dto.booking.CreateBookingDto;
 import com.prm.flightbooking.dto.booking.PassengerInfoDto;
-import com.prm.flightbooking.dto.payment.CreatePaymentDto;
-import com.prm.flightbooking.dto.payment.PaymentResponseDto;
-import com.prm.flightbooking.dialogs.PaymentMethodSelectionDialog;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -60,17 +49,13 @@ public class BookingFormActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private ImageButton btnBack;
     private BookingApiEndpoint bookingApi;
-    private PaymentApiEndpoint paymentApi;
     private SharedPreferences sharedPreferences;
     private int flightId, userId, seatClassId, passengerCount;
     private List<PassengerInfoDto> passengerDetails;
     private BigDecimal seatClassPrice;
     private int notificationId = 1000;
-    private String transactionId;
-    private AlertDialog paymentDialog;
     private static final int STORAGE_PERMISSION_CODE = 100;
     private static final String TAG = "BookingFormActivity";
-    private static final String BANK_ACCOUNT_NUMBER = "555508122003";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +63,6 @@ public class BookingFormActivity extends AppCompatActivity {
         setContentView(R.layout.activity_booking_form);
 
         bookingApi = ApiServiceProvider.getBookingApi();
-        paymentApi = ApiServiceProvider.getPaymentApi();
         sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE);
 
         // Retrieve seatClassPrice from Intent
@@ -97,7 +81,6 @@ public class BookingFormActivity extends AppCompatActivity {
         bindingView();
         bindingAction();
         displayBookingSummary();
-        generateTransactionId();
     }
 
     private void requestStoragePermission() {
@@ -127,11 +110,8 @@ public class BookingFormActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
         btnBook.setOnClickListener(this::onBtnBookClick);
         cbTerms.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                showPaymentMethodSelection();
-            } else {
-                btnBook.setEnabled(false);
-            }
+            // Enable/disable booking button based on terms checkbox
+            btnBook.setEnabled(isChecked);
         });
     }
 
@@ -217,155 +197,6 @@ public class BookingFormActivity extends AppCompatActivity {
         }
     }
 
-    private void generateTransactionId() {
-        transactionId = UUID.randomUUID().toString();
-        Log.d(TAG, "Generated transactionId: " + transactionId);
-    }
-
-    private void showPaymentMethodSelection() {
-        PaymentMethodSelectionDialog.show(this, new PaymentMethodSelectionDialog.PaymentMethodListener() {
-            @Override
-            public void onPaymentMethodSelected(String paymentMethod) {
-                createPaymentWithMethod(paymentMethod);
-            }
-
-            @Override
-            public void onQRCodePayment() {
-                showQRCodePaymentDialog();
-            }
-        });
-    }
-
-    private void createPaymentWithMethod(String paymentMethod) {
-        progressBar.setVisibility(View.VISIBLE);
-        
-        CreatePaymentDto paymentDto = new CreatePaymentDto();
-        paymentDto.setBookingId(0); // Will be set after booking is created
-        paymentDto.setPaymentMethod(paymentMethod);
-        paymentDto.setReturnUrl("flightbooking://payment/return");
-        paymentDto.setCancelUrl("flightbooking://payment/cancel");
-        
-        // For now, we'll create a mock payment URL since we don't have bookingId yet
-        // In a real implementation, you would create the booking first, then create payment
-        String mockPaymentUrl = generateMockPaymentUrl(paymentMethod);
-        openPaymentUrl(mockPaymentUrl, paymentMethod);
-        
-        progressBar.setVisibility(View.GONE);
-    }
-
-    private String generateMockPaymentUrl(String paymentMethod) {
-        BigDecimal totalPrice = calculateTotalPrice();
-        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
-        String formattedPrice = currencyFormat.format(totalPrice);
-        
-        switch (paymentMethod) {
-            case "MOMO":
-                return "https://test-payment.momo.vn/v2/gateway/api/create?amount=" + totalPrice + "&orderInfo=Thanh%20toan%20ve%20may%20bay";
-            case "ZALOPAY":
-                return "https://sb-openapi.zalopay.vn/v2/create?amount=" + totalPrice + "&description=Thanh%20toan%20ve%20may%20bay";
-            case "VNPAY":
-                return "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?amount=" + totalPrice + "&orderInfo=Thanh%20toan%20ve%20may%20bay";
-            default:
-                return "https://example.com/payment";
-        }
-    }
-
-    private void openPaymentUrl(String paymentUrl, String paymentMethod) {
-        try {
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse(paymentUrl));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            
-            Toast.makeText(this, "Đang mở " + paymentMethod + " để thanh toán...", Toast.LENGTH_LONG).show();
-            
-            // Enable booking button after payment method is selected
-            btnBook.setEnabled(true);
-        } catch (Exception e) {
-            Toast.makeText(this, "Không thể mở trình duyệt để thanh toán", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void showQRCodePaymentDialog() {
-        // Load QR code from drawable
-        Bitmap qrCodeBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.qrcode_default);
-        if (qrCodeBitmap == null) {
-            Log.e(TAG, "Error loading QR code from drawable/qrcode_default.jpg");
-            Toast.makeText(this, "Lỗi tải mã QR ngân hàng", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Calculate total price for display
-        BigDecimal totalPrice = calculateTotalPrice();
-        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
-        String formattedPrice = currencyFormat.format(totalPrice);
-
-        // Create dialog with QR code
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Quét mã QR để thanh toán");
-
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(20, 20, 20, 20);
-
-        ImageView qrCodeView = new ImageView(this);
-        qrCodeView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        qrCodeView.setImageBitmap(qrCodeBitmap);
-        layout.addView(qrCodeView);
-
-        TextView instructions = new TextView(this);
-        instructions.setText("Vui lòng quét mã QR để chuyển khoản vào số tài khoản:\n\n" +
-                "Số tài khoản: " + BANK_ACCOUNT_NUMBER + "\n" +
-                "Số tiền: " + formattedPrice + "\n" +
-                "Nội dung chuyển khoản: " + transactionId + "\n\n" +
-                "Sau khi chuyển khoản, nhấn 'Xác nhận' để nhập mã OTP.");
-        instructions.setPadding(0, 20, 0, 20);
-        layout.addView(instructions);
-
-        builder.setView(layout);
-        builder.setPositiveButton("Xác nhận", (dialog, which) -> showOtpDialog());
-        builder.setNegativeButton("Hủy", (dialog, which) -> {
-            btnBook.setEnabled(false);
-            dialog.dismiss();
-        });
-
-        paymentDialog = builder.create();
-        paymentDialog.show();
-    }
-
-    private void showOtpDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Nhập mã OTP");
-
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(20, 20, 20, 20);
-
-        EditText etOtp = new EditText(this);
-        etOtp.setHint("Nhập mã OTP (mặc định: 111)");
-        etOtp.setPadding(10, 10, 10, 10);
-        layout.addView(etOtp);
-
-        builder.setView(layout);
-        builder.setPositiveButton("Xác nhận", (dialog, which) -> {
-            String otp = etOtp.getText().toString().trim();
-            if ("111".equals(otp)) {
-                btnBook.setEnabled(true);
-                Toast.makeText(this, "Thanh toán thành công!", Toast.LENGTH_SHORT).show();
-                if (paymentDialog != null && paymentDialog.isShowing()) {
-                    paymentDialog.dismiss();
-                }
-                dialog.dismiss();
-            } else {
-                Toast.makeText(this, "Mã OTP không đúng. Vui lòng nhập 111.", Toast.LENGTH_SHORT).show();
-            }
-        });
-        builder.setNegativeButton("Hủy", (dialog, which) -> dialog.dismiss());
-
-        AlertDialog otpDialog = builder.create();
-        otpDialog.show();
-    }
-
     private void onBtnBookClick(View view) {
         if (!validateBookingInput()) {
             return;
@@ -421,7 +252,9 @@ public class BookingFormActivity extends AppCompatActivity {
 
         Toast.makeText(this, successMessage, Toast.LENGTH_LONG).show();
         sendBookingSuccessNotification(bookingReference, bookingId);
-        navigateToMainMenu();
+        
+        // Navigate to PayActivity to complete payment
+        navigateToPayment(bookingId);
     }
 
     private void handleErrorResponse(Response<BookingResponseDto> response) {
@@ -475,28 +308,15 @@ public class BookingFormActivity extends AppCompatActivity {
         notificationManager.notify(notificationId++, notification);
     }
 
-    private void navigateToMainMenu() {
-        Intent intent = new Intent(this, MainMenuActivity.class);
+    private void navigateToPayment(int bookingId) {
+        // Navigate to PayActivity to complete payment
+        Intent intent = new Intent(this, PayActivity.class);
+        intent.putExtra("bookingId", bookingId);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finish();
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (paymentDialog != null && paymentDialog.isShowing()) {
-            paymentDialog.dismiss();
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (paymentDialog != null && paymentDialog.isShowing()) {
-            paymentDialog.dismiss();
-        }
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {

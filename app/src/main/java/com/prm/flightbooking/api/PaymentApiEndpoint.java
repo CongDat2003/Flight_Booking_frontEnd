@@ -11,13 +11,13 @@ import retrofit2.http.Path;
 
 public interface PaymentApiEndpoint {
     
-    @POST("api/payment/create")
+    @POST("payment/create")
     Call<PaymentResponseDto> createPayment(@Body CreatePaymentDto paymentDto);
     
-    @GET("api/payment/status/{transactionId}")
+    @GET("payment/status/{transactionId}")
     Call<PaymentResponseDto> getPaymentStatus(@Path("transactionId") String transactionId);
     
-    @POST("api/payment/callback")
+    @POST("payment/callback")
     Call<PaymentResponseDto> paymentCallback(@Body Object callbackData);
 }
 

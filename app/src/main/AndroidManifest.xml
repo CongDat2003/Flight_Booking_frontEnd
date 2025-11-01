@@ -117,6 +117,12 @@
             android:name=".NotificationActivity"
             android:exported="false" />
 
+        <!-- 10. Chat - Hỗ trợ khách hàng -->
+        <activity
+            android:name=".ChatActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- 9. AI Plan - Gợi ý từ AI -->
         <activity
             android:name=".AIPlannerActivity"

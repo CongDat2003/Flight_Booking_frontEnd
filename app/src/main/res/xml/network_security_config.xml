@@ -23,6 +23,15 @@
         <domain includeSubdomains="true">192.168.10.0/24</domain>
     </domain-config>
     
+    <!-- VNPay HTTPS domain -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">sandbox.vnpayment.vn</domain>
+        <domain includeSubdomains="true">vnpayment.vn</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+    
     <debug-overrides>
         <trust-anchors>
             <certificates src="system" />

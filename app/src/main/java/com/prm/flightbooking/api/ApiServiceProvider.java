@@ -48,4 +48,8 @@ public class ApiServiceProvider {
     public static PaymentApiEndpoint getPaymentApi() {
         return retrofit.create(PaymentApiEndpoint.class);
     }
+
+    public static ChatApiEndpoint getChatApi() {
+        return retrofit.create(ChatApiEndpoint.class);
+    }
 }

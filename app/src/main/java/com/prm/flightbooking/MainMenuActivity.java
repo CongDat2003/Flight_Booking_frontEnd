@@ -241,7 +241,7 @@ public class MainMenuActivity extends AppCompatActivity {
 
         optionSupport.setOnClickListener(v -> {
             bottomSheetDialog.dismiss();
-            Toast.makeText(this, "Tính năng hỗ trợ sẽ sớm có", Toast.LENGTH_SHORT).show();
+            navigateToActivity(ChatActivity.class);
         });
 
         optionLogout.setOnClickListener(v -> {

@@ -8,15 +8,30 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Chọn kênh VNPay (demo)"
+        android:text="Chọn kênh VNPay (tùy chọn)"
         android:textStyle="bold"
         android:textSize="16sp"
+        android:paddingBottom="8dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nếu không chọn, VNPay sẽ hiển thị tất cả phương thức thanh toán"
+        android:textSize="12sp"
+        android:textColor="#666666"
         android:paddingBottom="12dp"/>
 
     <RadioGroup
         android:id="@+id/rg_vnpay_channel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/rb_all"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hiển thị tất cả phương thức (Khuyến nghị)"
+            android:checked="true"/>
 
         <RadioButton
             android:id="@+id/rb_vnpayqr"

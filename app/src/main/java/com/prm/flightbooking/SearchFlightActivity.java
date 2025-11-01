@@ -41,7 +41,7 @@ import retrofit2.Response;
 public class SearchFlightActivity extends AppCompatActivity {
 
     // UI
-    private TextView tvUserName, tvAdultCount, tvDepartureDate, tvReturnDate, tvClass;
+    private TextView tvUserName, tvAdultCount, tvDepartureDate, tvDepartureTime, tvClass;
     private AutoCompleteTextView actvFrom, actvTo;
     private ImageButton btnMinusAdult, btnPlusAdult;
     private Button btnSearchFlights;
@@ -86,7 +86,7 @@ public class SearchFlightActivity extends AppCompatActivity {
         actvTo = findViewById(R.id.tv_to);
         tvAdultCount = findViewById(R.id.tv_adult_count);
         tvDepartureDate = findViewById(R.id.tv_departure_date);
-        tvReturnDate = findViewById(R.id.tv_return_date);
+        tvDepartureTime = findViewById(R.id.tv_departure_time);
         tvClass = findViewById(R.id.tv_class);
         btnMinusAdult = findViewById(R.id.btn_minus_adult);
         btnPlusAdult = findViewById(R.id.btn_plus_adult);
@@ -100,7 +100,7 @@ public class SearchFlightActivity extends AppCompatActivity {
         btnMinusAdult.setOnClickListener(this::onBtnMinusAdultClick);
         btnPlusAdult.setOnClickListener(this::onBtnPlusAdultClick);
         tvDepartureDate.setOnClickListener(this::onTvDepartureDateClick);
-        tvReturnDate.setOnClickListener(this::onTvReturnDateClick);
+        tvDepartureTime.setOnClickListener(this::onTvDepartureTimeClick);
         tvClass.setOnClickListener(this::onTvClassClick);
         btnSearchFlights.setOnClickListener(this::onBtnSearchFlightsClick);
         actvFrom.setOnClickListener(v -> actvFrom.showDropDown());
@@ -208,11 +208,10 @@ public class SearchFlightActivity extends AppCompatActivity {
         tvAdultCount.setText(String.valueOf(adultCount));
         tvClass.setText(seatClassNames[0]);
 
-        // Thiết lập ngày khởi hành và ngày về
+        // Thiết lập ngày khởi hành và giờ đi
         Calendar calendar = Calendar.getInstance();
         tvDepartureDate.setText(dateFormat.format(calendar.getTime()));
-        calendar.add(Calendar.DAY_OF_MONTH, 7);
-        tvReturnDate.setText(dateFormat.format(calendar.getTime()));
+        tvDepartureTime.setText(String.format(Locale.getDefault(), "%02d:%02d", calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
     }
 
     // Giảm số lượng người lớn
@@ -230,9 +229,9 @@ public class SearchFlightActivity extends AppCompatActivity {
         showDatePicker(true);
     }
 
-    // Chọn ngày về
-    private void onTvReturnDateClick(View view) {
-        showDatePicker(false);
+    // Chọn giờ đi
+    private void onTvDepartureTimeClick(View view) {
+        showTimePicker();
     }
 
     // Chọn hạng ghế
@@ -266,8 +265,6 @@ public class SearchFlightActivity extends AppCompatActivity {
                     String dateStr = dateFormat.format(selectedDate.getTime());
                     if (isDeparture) {
                         tvDepartureDate.setText(dateStr);
-                    } else {
-                        tvReturnDate.setText(dateStr);
                     }
                 },
                 calendar.get(Calendar.YEAR),
@@ -276,6 +273,16 @@ public class SearchFlightActivity extends AppCompatActivity {
         );
         datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());
         datePickerDialog.show();
+    }
+
+    // Hiển thị dialog chọn giờ
+    private void showTimePicker() {
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+        new android.app.TimePickerDialog(this, (timePicker, h, m) -> {
+            tvDepartureTime.setText(String.format(Locale.getDefault(), "%02d:%02d", h, m));
+        }, hour, minute, true).show();
     }
 
     // Hiển thị dialog chọn hạng ghế
@@ -294,11 +301,11 @@ public class SearchFlightActivity extends AppCompatActivity {
         String from = actvFrom.getText().toString().trim();
         String to = actvTo.getText().toString().trim();
         String departureDateStr = tvDepartureDate.getText().toString().trim();
-        String returnDateStr = tvReturnDate.getText().toString().trim();
+        String departureTimeStr = tvDepartureTime.getText().toString().trim();
         String seatClass = tvClass.getText().toString().trim();
 
         // Validate dữ liệu nhập
-        if (!validateSearchInput(from, to, departureDateStr, seatClass)) {
+        if (!validateSearchInput(from, to, departureDateStr, departureTimeStr, seatClass)) {
             return;
         }
 
@@ -320,7 +327,7 @@ public class SearchFlightActivity extends AppCompatActivity {
             // Tạo DTO tìm kiếm
             AdvancedFlightSearchDto searchDto = createSearchDto(
                     departureAirportCode, arrivalAirportCode,
-                    departureDateStr, returnDateStr, seatClass);
+                    departureDateStr, departureTimeStr, seatClass);
 
             // Gọi API tìm kiếm
             Call<FlightSearchResultDto> call = searchApi.advancedSearch(searchDto);
@@ -354,7 +361,7 @@ public class SearchFlightActivity extends AppCompatActivity {
     }
 
     // Validate dữ liệu đầu vào
-    private boolean validateSearchInput(String from, String to, String departureDateStr, String seatClass) {
+    private boolean validateSearchInput(String from, String to, String departureDateStr, String departureTimeStr, String seatClass) {
         if (from.isEmpty() || from.equals("Chọn sân bay khởi hành")) {
             Toast.makeText(this, "Vui lòng chọn sân bay khởi hành", Toast.LENGTH_SHORT).show();
             return false;
@@ -367,6 +374,10 @@ public class SearchFlightActivity extends AppCompatActivity {
             Toast.makeText(this, "Vui lòng chọn ngày khởi hành", Toast.LENGTH_SHORT).show();
             return false;
         }
+        if (departureTimeStr.isEmpty() || departureTimeStr.equals("Chọn giờ")) {
+            Toast.makeText(this, "Vui lòng chọn giờ khởi hành", Toast.LENGTH_SHORT).show();
+            return false;
+        }
         if (seatClass.isEmpty() || seatClass.equals("Chọn hạng ghế")) {
             Toast.makeText(this, "Vui lòng chọn hạng ghế", Toast.LENGTH_SHORT).show();
             return false;
@@ -376,30 +387,31 @@ public class SearchFlightActivity extends AppCompatActivity {
 
     // Tạo DTO tìm kiếm
     private AdvancedFlightSearchDto createSearchDto(String departureCode, String arrivalCode,
-                                                    String departureDateStr, String returnDateStr, String seatClass) throws ParseException {
+                                                    String departureDateStr, String departureTimeStr, String seatClass) throws ParseException {
         Date departureDate = dateFormat.parse(departureDateStr);
-        Date returnDate = null;
-        if (!returnDateStr.isEmpty() && !returnDateStr.equals("Chọn ngày")) {
-            returnDate = dateFormat.parse(returnDateStr);
-        }
+        // time range: selected minute to selected minute + 59s
+        String[] hm = departureTimeStr.split(":");
+        int h = Integer.parseInt(hm[0]);
+        int m = Integer.parseInt(hm[1]);
+        String from = String.format(Locale.US, "%02d:%02d:00", h, m);
+        String to = String.format(Locale.US, "%02d:%02d:59", h, m);
 
         AdvancedFlightSearchDto searchDto = new AdvancedFlightSearchDto();
         searchDto.setDepartureAirportCode(departureCode);
         searchDto.setArrivalAirportCode(arrivalCode);
         searchDto.setDepartureDate(departureDate);
-        searchDto.setReturnDate(returnDate);
+        searchDto.setReturnDate(null);
         searchDto.setPassengers(adultCount);
         searchDto.setSeatClass(seatClass);
+        searchDto.setDepartureTimeFrom(from);
+        searchDto.setDepartureTimeTo(to);
 
         return searchDto;
     }
 
     // Xử lý kết quả tìm kiếm thành công
     private void handleSearchSuccess(FlightSearchResultDto result) {
-        String message = "Tìm thấy " + result.getOutboundFlights().size() + " chuyến bay đi";
-        if (result.getReturnFlights() != null && !result.getReturnFlights().isEmpty()) {
-            message += " và " + result.getReturnFlights().size() + " chuyến bay về";
-        }
+        String message = "Tìm thấy " + result.getOutboundFlights().size() + " chuyến bay";
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
 
         try {
