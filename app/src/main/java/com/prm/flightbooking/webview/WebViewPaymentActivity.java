@@ -116,7 +116,7 @@ public class WebViewPaymentActivity extends AppCompatActivity {
                 // Cho phép WebView load URL bình thường
                 return false;
             }
-            
+
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 android.util.Log.d("WebViewPayment", "Page started: " + url);

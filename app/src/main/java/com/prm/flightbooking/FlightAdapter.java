@@ -87,16 +87,27 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.FlightView
         // Gán sự kiện click cho item nếu listener không null
         if (listener != null) {
             String status = flight.getStatus();
+            // Chặn đặt vé cho các chuyến bay: DELAYED, COMPLETED, CANCELLED, PREPARING, DEPARTED
             if ("COMPLETED".equalsIgnoreCase(status)
+                    || "DELAYED".equalsIgnoreCase(status)
+                    || "CANCELLED".equalsIgnoreCase(status)
                     || "PREPARING".equalsIgnoreCase(status)
                     || "DEPARTED".equalsIgnoreCase(status)) {
-                // Nếu trạng thái là 1 trong 3 trạng thái trên
+                // Hiển thị thông báo hợp lý tùy theo trạng thái
                 holder.itemView.setOnClickListener(v -> {
-                    Toast.makeText(holder.itemView.getContext(), "Chuyến bay không thể đặt vé vì trạng thái: " + convertStatusToVietnamese(status), Toast.LENGTH_SHORT).show();
+                    String message = getStatusMessage(status);
+                    android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(holder.itemView.getContext());
+                    builder.setTitle("Không thể đặt vé");
+                    builder.setMessage(message);
+                    builder.setPositiveButton("Đã hiểu", null);
+                    builder.show();
                 });
+                // Làm mờ item để thể hiện không thể đặt
+                holder.itemView.setAlpha(0.6f);
             } else {
-                // Cho phép click bình thường
+                // Cho phép click bình thường cho SCHEDULED
                 holder.itemView.setOnClickListener(v -> listener.onFlightClick(flight.getFlightId()));
+                holder.itemView.setAlpha(1.0f);
             }
         } else {
             holder.itemView.setOnClickListener(null); // Tránh lỗi nếu listener null
@@ -145,6 +156,26 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.FlightView
                 return "Đã khởi hành";
             default:
                 return status; // Trả về nguyên trạng nếu không có mapping
+        }
+    }
+
+    // Trả về thông báo hợp lý cho từng trạng thái không thể đặt vé
+    private String getStatusMessage(String status) {
+        if (status == null) return "Chuyến bay này không thể đặt vé.";
+
+        switch (status.toUpperCase(Locale.ROOT)) {
+            case "CANCELLED":
+                return "Chuyến bay này đã bị hủy. Vui lòng chọn chuyến bay khác hoặc liên hệ với chúng tôi để được hỗ trợ.";
+            case "DELAYED":
+                return "Chuyến bay này đang bị hoãn. Vui lòng chọn chuyến bay khác hoặc liên hệ với chúng tôi để biết thông tin cập nhật.";
+            case "COMPLETED":
+                return "Chuyến bay này đã hoàn thành. Vui lòng chọn chuyến bay khác.";
+            case "PREPARING":
+                return "Chuyến bay này đang chuẩn bị khởi hành và không thể đặt vé thêm. Vui lòng chọn chuyến bay khác.";
+            case "DEPARTED":
+                return "Chuyến bay này đã khởi hành. Vui lòng chọn chuyến bay khác.";
+            default:
+                return "Chuyến bay này hiện không thể đặt vé. Vui lòng chọn chuyến bay khác.";
         }
     }
 }

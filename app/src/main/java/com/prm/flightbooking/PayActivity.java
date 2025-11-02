@@ -119,94 +119,9 @@ public class PayActivity extends AppCompatActivity {
         fetchBookingDetail();
     }
 
-    private void showVNPayChannelPicker() {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_vnpay_channel_picker, null);
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setView(dialogView)
-                .setPositiveButton("Tiếp tục", (d, w) -> {
-                    RadioGroup rg = dialogView.findViewById(R.id.rg_vnpay_channel);
-                    int checked = rg.getCheckedRadioButtonId();
-                    String bankCode = null; // Mặc định: không set bankCode để VNPay hiển thị trang chọn phương thức
-                    
-                    // Nếu user chọn cụ thể kênh nào, mới set bankCode
-                    // Nếu chọn "Hiển thị tất cả" (rb_all) hoặc không chọn gì, bankCode = null
-                    if (checked == R.id.rb_all) {
-                        bankCode = null; // Hiển thị tất cả phương thức
-                    } else if (checked == R.id.rb_vnpayqr) {
-                        bankCode = "VNPAYQR";
-                    } else if (checked == R.id.rb_vnbank) {
-                        bankCode = "VNBANK";
-                    } else if (checked == R.id.rb_intcard) {
-                        bankCode = "INTCARD";
-                    }
-                    // Nếu không chọn gì, bankCode = null -> VNPay hiển thị tất cả phương thức
-
-                    android.util.Log.d("PayActivity", "Creating VNPay payment with bankCode: " + (bankCode != null ? bankCode : "null (show all methods)"));
-
-                    // Tạo thanh toán VNPay
-                    progressBar.setVisibility(View.VISIBLE);
-                    CreatePaymentDto paymentDto = new CreatePaymentDto();
-                    paymentDto.setBookingId(bookingId);
-                    paymentDto.setPaymentMethod("VNPAY");
-                    // Set ReturnUrl và CancelUrl - API yêu cầu các field này
-                    // Backend sẽ tự động tạo ReturnUrl đúng (http://192.168.1.7:501/api/payment/vnpay-return)
-                    paymentDto.setReturnUrl("flightbooking://payment/return");
-                    paymentDto.setCancelUrl("flightbooking://payment/cancel");
-                    // Chỉ set bankCode nếu user đã chọn, nếu null thì VNPay sẽ hiển thị trang chọn phương thức
-                    if (bankCode != null) {
-                        paymentDto.setBankCode(bankCode);
-                    }
-
-                    Call<PaymentResponseDto> call = paymentApi.createPayment(paymentDto);
-                    call.enqueue(new Callback<PaymentResponseDto>() {
-                        @Override
-                        public void onResponse(Call<PaymentResponseDto> call, Response<PaymentResponseDto> response) {
-                            progressBar.setVisibility(View.GONE);
-                            if (response.isSuccessful() && response.body() != null) {
-                                PaymentResponseDto paymentResponse = response.body();
-                                String paymentUrl = paymentResponse.getPaymentUrl();
-                                android.util.Log.d("PayActivity", "Payment URL created: " + paymentUrl);
-                                if (paymentUrl != null && !paymentUrl.trim().isEmpty()) {
-                                    openPaymentUrl(paymentUrl, "VNPAY");
-                                } else {
-                                    android.util.Log.e("PayActivity", "Payment URL is null or empty. Response: " + paymentResponse);
-                                    Toast.makeText(PayActivity.this, "Không nhận được URL thanh toán từ server. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
-                                }
-                            } else {
-                                String errorMsg = "Không thể tạo thanh toán";
-                                if (response.errorBody() != null) {
-                                    try {
-                                        String errorBody = response.errorBody().string();
-                                        android.util.Log.e("PayActivity", "Payment creation error: " + errorBody);
-                                        // Parse JSON error if possible
-                                        if (errorBody.contains("message")) {
-                                            errorMsg = errorBody;
-                                        } else {
-                                            errorMsg += ": " + errorBody;
-                                        }
-                                    } catch (Exception e) {
-                                        android.util.Log.e("PayActivity", "Error reading error body", e);
-                                        errorMsg += ": " + response.message();
-                                    }
-                                } else {
-                                    errorMsg += ": " + response.message() + " (Code: " + response.code() + ")";
-                                }
-                                android.util.Log.e("PayActivity", errorMsg);
-                                Toast.makeText(PayActivity.this, errorMsg, Toast.LENGTH_LONG).show();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<PaymentResponseDto> call, Throwable t) {
-                            progressBar.setVisibility(View.GONE);
-                            Toast.makeText(PayActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                })
-                .setNegativeButton("Hủy", (d, w) -> d.dismiss())
-                .create();
-        dialog.show();
-    }
+    // Đã xóa method showVNPayChannelPicker() vì không cần thiết
+    // Khi chọn VNPay, sẽ gọi trực tiếp createPaymentWithMethod("VNPAY")
+    // VNPay sandbox URL đã có sẵn các phương thức thanh toán (VNPay QR, thẻ nội địa, thẻ quốc tế)
 
     // Bind views from activity_pay.xml
     private void bindingView() {
@@ -264,8 +179,14 @@ public class PayActivity extends AppCompatActivity {
             @Override
             public void onPaymentMethodSelected(String paymentMethod) {
                 if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
-                    // VNPay - hiển thị dialog chọn kênh thanh toán
-                    showVNPayChannelPicker();
+                    // VNPay - gọi trực tiếp tạo payment và mở VNPay sandbox URL
+                    // KHÔNG hiện dialog chọn kênh - VNPay sandbox đã có sẵn TẤT CẢ phương thức thanh toán:
+                    // - VNPay QR Code
+                    // - Thẻ nội địa (ATM)
+                    // - Thẻ quốc tế (Visa/MasterCard)
+                    // - Ví điện tử VNPay
+                    // Chỉ cần mở URL sandbox của VNPay, user sẽ tự chọn phương thức trong trang đó
+                    createPaymentWithMethod("VNPAY");
                 } else if ("ZALOPAY".equalsIgnoreCase(paymentMethod) || "MOMO".equalsIgnoreCase(paymentMethod)) {
                     // ZaloPay và MoMo đang bảo trì - đã được xử lý trong dialog
                     // Không làm gì cả
@@ -530,41 +451,72 @@ public class PayActivity extends AppCompatActivity {
         paymentDto.setReturnUrl("flightbooking://payment/return");
         paymentDto.setCancelUrl("flightbooking://payment/cancel");
         
+        // VNPay: KHÔNG set BankCode - để VNPay sandbox hiển thị TẤT CẢ phương thức thanh toán
+        // (VNPay sandbox đã có sẵn các phương thức: VNPay QR, thẻ nội địa, thẻ quốc tế)
+        if (!"VNPAY".equalsIgnoreCase(paymentMethod)) {
+            // Các phương thức khác có thể cần BankCode (nếu có)
+            paymentDto.setBankCode(null);
+        }
+        
+        android.util.Log.d("PayActivity", "Creating payment - BookingId: " + bookingId + ", Method: " + paymentMethod);
+        
         Call<PaymentResponseDto> call = paymentApi.createPayment(paymentDto);
         call.enqueue(new Callback<PaymentResponseDto>() {
             @Override
             public void onResponse(Call<PaymentResponseDto> call, Response<PaymentResponseDto> response) {
                 progressBar.setVisibility(View.GONE);
+                
+                android.util.Log.d("PayActivity", "Payment API Response - Code: " + response.code() + ", Success: " + response.isSuccessful());
+                
                 if (response.isSuccessful() && response.body() != null) {
                     PaymentResponseDto paymentResponse = response.body();
+                    
+                    // Log toàn bộ response để debug
+                    android.util.Log.d("PayActivity", "Payment Response Details:");
+                    android.util.Log.d("PayActivity", "  - BookingId: " + paymentResponse.getBookingId());
+                    android.util.Log.d("PayActivity", "  - PaymentId: " + paymentResponse.getPaymentId());
+                    android.util.Log.d("PayActivity", "  - TransactionId: " + paymentResponse.getTransactionId());
+                    android.util.Log.d("PayActivity", "  - PaymentMethod: " + paymentResponse.getPaymentMethod());
+                    android.util.Log.d("PayActivity", "  - PaymentUrl: " + paymentResponse.getPaymentUrl());
+                    android.util.Log.d("PayActivity", "  - Status: " + paymentResponse.getStatus());
+                    android.util.Log.d("PayActivity", "  - Amount: " + paymentResponse.getAmount());
+                    android.util.Log.d("PayActivity", "  - Full Response: " + paymentResponse.toString());
+                    
                     String paymentUrl = paymentResponse.getPaymentUrl();
-                    android.util.Log.d("PayActivity", "Payment URL created: " + paymentUrl);
+                    
                     if (paymentUrl != null && !paymentUrl.trim().isEmpty()) {
+                        android.util.Log.d("PayActivity", "Payment URL received successfully: " + paymentUrl);
                         openPaymentUrl(paymentUrl, paymentMethod);
                     } else {
-                        android.util.Log.e("PayActivity", "Payment URL is null or empty. Response: " + paymentResponse);
+                        android.util.Log.e("PayActivity", "Payment URL is null or empty!");
+                        android.util.Log.e("PayActivity", "Full response object: " + paymentResponse.toString());
                         Toast.makeText(PayActivity.this, "Không nhận được URL thanh toán từ server. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
                     }
                 } else {
                     String errorMsg = "Không thể tạo thanh toán";
-                    if (response.errorBody() != null) {
-                        try {
+                    
+                    // Log raw response để debug
+                    try {
+                        if (response.errorBody() != null) {
                             String errorBody = response.errorBody().string();
-                            android.util.Log.e("PayActivity", "Payment creation error: " + errorBody);
+                            android.util.Log.e("PayActivity", "Payment API Error - Code: " + response.code());
+                            android.util.Log.e("PayActivity", "Error Body: " + errorBody);
+                            
                             // Parse JSON error if possible
                             if (errorBody.contains("message")) {
                                 errorMsg = errorBody;
                             } else {
                                 errorMsg += ": " + errorBody;
                             }
-                        } catch (Exception e) {
-                            android.util.Log.e("PayActivity", "Error reading error body", e);
-                            errorMsg += ": " + response.message();
+                        } else {
+                            android.util.Log.e("PayActivity", "Payment API Error - Code: " + response.code() + ", Message: " + response.message());
+                            errorMsg += ": " + response.message() + " (Code: " + response.code() + ")";
                         }
-                    } else {
+                    } catch (Exception e) {
+                        android.util.Log.e("PayActivity", "Error reading error body", e);
                         errorMsg += ": " + response.message() + " (Code: " + response.code() + ")";
                     }
-                    android.util.Log.e("PayActivity", errorMsg);
+                    
                     Toast.makeText(PayActivity.this, errorMsg, Toast.LENGTH_LONG).show();
                 }
             }
@@ -572,6 +524,7 @@ public class PayActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<PaymentResponseDto> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
+                android.util.Log.e("PayActivity", "Payment API call failed", t);
                 Toast.makeText(PayActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -597,31 +550,31 @@ public class PayActivity extends AppCompatActivity {
                 
                 android.util.Log.d("PayActivity", "Payment result - Status: " + status + ", Message: " + message);
                 
-                if ("success".equalsIgnoreCase(status)) {
-                    // Navigate to success result page
-                    Intent resultIntent = new Intent(this, PaymentResultActivity.class);
-                    resultIntent.putExtra(PaymentResultActivity.EXTRA_STATUS, "success");
+            if ("success".equalsIgnoreCase(status)) {
+                // Navigate to success result page
+                Intent resultIntent = new Intent(this, PaymentResultActivity.class);
+                resultIntent.putExtra(PaymentResultActivity.EXTRA_STATUS, "success");
                     resultIntent.putExtra(PaymentResultActivity.EXTRA_MESSAGE, message != null ? message : "Thanh toán VNPay thành công");
-                    resultIntent.putExtra(PaymentResultActivity.EXTRA_BOOKING_ID, bookingId);
+                resultIntent.putExtra(PaymentResultActivity.EXTRA_BOOKING_ID, bookingId);
                     if (transactionId != null) {
                         resultIntent.putExtra("transactionId", transactionId);
                     }
-                    startActivity(resultIntent);
-                    finish();
+                startActivity(resultIntent);
+                finish();
                 } else {
-                    // Navigate to failed result page
-                    Intent resultIntent = new Intent(this, PaymentResultActivity.class);
-                    resultIntent.putExtra(PaymentResultActivity.EXTRA_STATUS, "failed");
+                // Navigate to failed result page
+                Intent resultIntent = new Intent(this, PaymentResultActivity.class);
+                resultIntent.putExtra(PaymentResultActivity.EXTRA_STATUS, "failed");
                     resultIntent.putExtra(PaymentResultActivity.EXTRA_MESSAGE, message != null ? message : "Thanh toán VNPay thất bại");
-                    resultIntent.putExtra(PaymentResultActivity.EXTRA_BOOKING_ID, bookingId);
+                resultIntent.putExtra(PaymentResultActivity.EXTRA_BOOKING_ID, bookingId);
                     if (transactionId != null) {
                         resultIntent.putExtra("transactionId", transactionId);
                     }
                     if (responseCode != null) {
                         resultIntent.putExtra("responseCode", responseCode);
                     }
-                    startActivity(resultIntent);
-                    finish();
+                startActivity(resultIntent);
+                finish();
                 }
             } else {
                 // Không có data, có thể user đã đóng WebView

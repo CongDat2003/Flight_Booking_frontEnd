@@ -18,8 +18,15 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient {
     private static final String ANDROID_STUDIO_BASE_URL = "http://10.0.2.2:501/api/";
     private static final String BLUESTACKS_BASE_URL = "http://10.0.2.2:501/api/";
-    private static final String REAL_IP_BASE_URL = "http://192.168.1.7:501/api/";
+    // IP của máy tính đang chạy API server
+    private static final String REAL_IP_BASE_URL = "http://192.168.10.73:501/api/";
     private static final String LOCALHOST_BASE_URL = "http://10.0.2.2:501/api/";
+    
+    // Danh sách các IP dự phòng để thử (theo thứ tự ưu tiên)
+    private static final String[] FALLBACK_IPS = {
+        "http://192.168.10.73:501/api/",  // IP chính
+        "http://10.0.2.2:501/api/",       // Emulator fallback
+    };
 
     private static Retrofit retrofitInstance;
     private static Gson gsonInstance;
@@ -103,8 +110,18 @@ public class RetrofitClient {
             return BLUESTACKS_BASE_URL;
         }
         
-        // Nếu chạy trên thiết bị thật
+        // Nếu chạy trên thiết bị thật, dùng IP cấu hình
+        // Lưu ý: Cần đảm bảo API server đang chạy và thiết bị ở cùng mạng LAN
         return REAL_IP_BASE_URL;
+    }
+    
+    /**
+     * Method để set base URL tùy chỉnh (hữu ích khi cần thay đổi IP động)
+     * @param baseUrl URL đầy đủ, ví dụ: "http://192.168.1.100:501/api/"
+     */
+    public static void setBaseUrl(String baseUrl) {
+        retrofitInstance = null; // Reset instance để tạo lại với URL mới
+        // Lưu ý: Cần implement SharedPreferences để lưu URL tùy chỉnh nếu muốn lưu vĩnh viễn
     }
     
     // Method để force sử dụng localhost (tạm thời)
