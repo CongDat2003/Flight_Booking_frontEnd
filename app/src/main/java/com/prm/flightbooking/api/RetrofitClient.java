@@ -19,12 +19,12 @@ public class RetrofitClient {
     private static final String ANDROID_STUDIO_BASE_URL = "http://10.0.2.2:501/api/";
     private static final String BLUESTACKS_BASE_URL = "http://10.0.2.2:501/api/";
     // IP của máy tính đang chạy API server
-    private static final String REAL_IP_BASE_URL = "http://192.168.10.73:501/api/";
+    private static final String REAL_IP_BASE_URL = "http://192.168.10.9:501/api/";
     private static final String LOCALHOST_BASE_URL = "http://10.0.2.2:501/api/";
     
     // Danh sách các IP dự phòng để thử (theo thứ tự ưu tiên)
     private static final String[] FALLBACK_IPS = {
-        "http://192.168.10.73:501/api/",  // IP chính
+        "http://192.168.10.9:501/api/",  // IP chính
         "http://10.0.2.2:501/api/",       // Emulator fallback
     };
 

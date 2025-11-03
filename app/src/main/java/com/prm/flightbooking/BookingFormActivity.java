@@ -27,9 +27,13 @@ import androidx.core.app.NotificationCompat;
 import com.google.android.material.textfield.TextInputEditText;
 import com.prm.flightbooking.api.ApiServiceProvider;
 import com.prm.flightbooking.api.BookingApiEndpoint;
+import com.prm.flightbooking.api.PaymentApiEndpoint;
 import com.prm.flightbooking.dto.booking.BookingResponseDto;
 import com.prm.flightbooking.dto.booking.CreateBookingDto;
 import com.prm.flightbooking.dto.booking.PassengerInfoDto;
+import com.prm.flightbooking.dto.payment.CreatePaymentDto;
+import com.prm.flightbooking.dto.payment.PaymentResponseDto;
+import com.prm.flightbooking.dialogs.PaymentMethodSelectionDialog;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
@@ -49,12 +53,14 @@ public class BookingFormActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private ImageButton btnBack;
     private BookingApiEndpoint bookingApi;
+    private PaymentApiEndpoint paymentApi;
     private SharedPreferences sharedPreferences;
     private int flightId, userId, seatClassId, passengerCount;
     private List<PassengerInfoDto> passengerDetails;
     private BigDecimal seatClassPrice;
     private int notificationId = 1000;
     private static final int STORAGE_PERMISSION_CODE = 100;
+    private static final int REQ_VNPAY = 1001;
     private static final String TAG = "BookingFormActivity";
 
     @Override
@@ -63,6 +69,7 @@ public class BookingFormActivity extends AppCompatActivity {
         setContentView(R.layout.activity_booking_form);
 
         bookingApi = ApiServiceProvider.getBookingApi();
+        paymentApi = ApiServiceProvider.getPaymentApi();
         sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE);
 
         // Retrieve seatClassPrice from Intent
@@ -201,6 +208,48 @@ public class BookingFormActivity extends AppCompatActivity {
         if (!validateBookingInput()) {
             return;
         }
+        
+        // Hiện dialog chọn phương thức thanh toán TRƯỚC
+        PaymentMethodSelectionDialog.show(this, new PaymentMethodSelectionDialog.PaymentMethodListener() {
+            @Override
+            public void onPaymentMethodSelected(String paymentMethod) {
+                // User đã chọn phương thức thanh toán → Tạo booking rồi tạo payment
+                proceedWithBookingAndPayment(paymentMethod);
+            }
+
+            @Override
+            public void onQRCodePayment() {
+                // QR Code payment - tạo booking nhưng không tạo payment online
+                proceedWithBookingOnly();
+            }
+        });
+    }
+    
+    private void proceedWithBookingAndPayment(String paymentMethod) {
+        setBookingInProgress(true);
+        CreateBookingDto bookingDto = createBookingData();
+        Call<BookingResponseDto> call = bookingApi.createBooking(bookingDto);
+        call.enqueue(new Callback<BookingResponseDto>() {
+            @Override
+            public void onResponse(Call<BookingResponseDto> call, Response<BookingResponseDto> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // Booking thành công → Tạo payment và mở thanh toán
+                    handleBookingSuccessForPayment(response.body(), paymentMethod);
+                } else {
+                    setBookingInProgress(false);
+                    handleErrorResponse(response);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<BookingResponseDto> call, Throwable t) {
+                setBookingInProgress(false);
+                Toast.makeText(BookingFormActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    private void proceedWithBookingOnly() {
         setBookingInProgress(true);
         CreateBookingDto bookingDto = createBookingData();
         Call<BookingResponseDto> call = bookingApi.createBooking(bookingDto);
@@ -209,6 +258,7 @@ public class BookingFormActivity extends AppCompatActivity {
             public void onResponse(Call<BookingResponseDto> call, Response<BookingResponseDto> response) {
                 setBookingInProgress(false);
                 if (response.isSuccessful() && response.body() != null) {
+                    // Booking thành công nhưng QR Code → Chỉ hiện thông báo
                     handleBookingSuccess(response.body());
                 } else {
                     handleErrorResponse(response);
@@ -253,8 +303,20 @@ public class BookingFormActivity extends AppCompatActivity {
         Toast.makeText(this, successMessage, Toast.LENGTH_LONG).show();
         sendBookingSuccessNotification(bookingReference, bookingId);
         
-        // Navigate to PayActivity to complete payment
+        // Navigate to PayActivity để thanh toán sau (dùng cho QR Code hoặc thanh toán lại)
         navigateToPayment(bookingId);
+    }
+    
+    private void handleBookingSuccessForPayment(BookingResponseDto bookingResponse, String paymentMethod) {
+        String bookingReference = bookingResponse.getBookingReference();
+        int bookingId = bookingResponse.getBookingId();
+        String successMessage = "Đặt vé thành công! Mã tham chiếu: " + bookingReference;
+
+        Toast.makeText(this, successMessage, Toast.LENGTH_SHORT).show();
+        sendBookingSuccessNotification(bookingReference, bookingId);
+        
+        // Tạo payment và mở WebView thanh toán ngay
+        createPaymentAndOpenWebView(bookingId, paymentMethod);
     }
 
     private void handleErrorResponse(Response<BookingResponseDto> response) {
@@ -309,7 +371,7 @@ public class BookingFormActivity extends AppCompatActivity {
     }
 
     private void navigateToPayment(int bookingId) {
-        // Navigate to PayActivity to complete payment
+        // Navigate to PayActivity to complete payment (dùng cho QR Code hoặc thanh toán lại)
         Intent intent = new Intent(this, PayActivity.class);
         intent.putExtra("bookingId", bookingId);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -317,6 +379,139 @@ public class BookingFormActivity extends AppCompatActivity {
         finish();
     }
 
+    private void createPaymentAndOpenWebView(int bookingId, String paymentMethod) {
+        CreatePaymentDto paymentDto = new CreatePaymentDto();
+        paymentDto.setBookingId(bookingId);
+        paymentDto.setPaymentMethod(paymentMethod);
+        paymentDto.setReturnUrl("flightbooking://payment/return");
+        paymentDto.setCancelUrl("flightbooking://payment/cancel");
+        
+        // VNPay: KHÔNG set BankCode - để VNPay sandbox hiển thị TẤT CẢ phương thức thanh toán
+        if (!"VNPAY".equalsIgnoreCase(paymentMethod)) {
+            paymentDto.setBankCode(null);
+        }
+        
+        Log.d(TAG, "Creating payment - BookingId: " + bookingId + ", Method: " + paymentMethod);
+        
+        Call<PaymentResponseDto> call = paymentApi.createPayment(paymentDto);
+        call.enqueue(new Callback<PaymentResponseDto>() {
+            @Override
+            public void onResponse(Call<PaymentResponseDto> call, Response<PaymentResponseDto> response) {
+                setBookingInProgress(false);
+                
+                Log.d(TAG, "Payment API Response - Code: " + response.code() + ", Success: " + response.isSuccessful());
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    PaymentResponseDto paymentResponse = response.body();
+                    
+                    Log.d(TAG, "Payment Response Details:");
+                    Log.d(TAG, "  - BookingId: " + paymentResponse.getBookingId());
+                    Log.d(TAG, "  - PaymentId: " + paymentResponse.getPaymentId());
+                    Log.d(TAG, "  - TransactionId: " + paymentResponse.getTransactionId());
+                    Log.d(TAG, "  - PaymentMethod: " + paymentResponse.getPaymentMethod());
+                    Log.d(TAG, "  - PaymentUrl: " + paymentResponse.getPaymentUrl());
+                    Log.d(TAG, "  - Status: " + paymentResponse.getStatus());
+                    Log.d(TAG, "  - Amount: " + paymentResponse.getAmount());
+                    
+                    String paymentUrl = paymentResponse.getPaymentUrl();
+                    
+                    if (paymentUrl != null && !paymentUrl.trim().isEmpty()) {
+                        Log.d(TAG, "Payment URL received successfully: " + paymentUrl);
+                        openPaymentWebView(paymentUrl, bookingId);
+                    } else {
+                        Log.e(TAG, "Payment URL is null or empty!");
+                        Toast.makeText(BookingFormActivity.this, "Không nhận được URL thanh toán từ server. Vui lòng thử lại.", Toast.LENGTH_LONG).show();
+                        // Fallback: Navigate to PayActivity
+                        navigateToPayment(bookingId);
+                    }
+                } else {
+                    String errorMsg = "Không thể tạo thanh toán";
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            Log.e(TAG, "Payment API Error - Code: " + response.code());
+                            Log.e(TAG, "Error Body: " + errorBody);
+                            errorMsg += ": " + errorBody;
+                        } else {
+                            Log.e(TAG, "Payment API Error - Code: " + response.code() + ", Message: " + response.message());
+                            errorMsg += ": " + response.message() + " (Code: " + response.code() + ")";
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error reading error body", e);
+                        errorMsg += ": " + response.message() + " (Code: " + response.code() + ")";
+                    }
+                    
+                    Toast.makeText(BookingFormActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                    // Fallback: Navigate to PayActivity
+                    navigateToPayment(bookingId);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PaymentResponseDto> call, Throwable t) {
+                setBookingInProgress(false);
+                Log.e(TAG, "Payment API call failed", t);
+                Toast.makeText(BookingFormActivity.this, "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                // Fallback: Navigate to PayActivity
+                navigateToPayment(bookingId);
+            }
+        });
+    }
+    
+    private void openPaymentWebView(String paymentUrl, int bookingId) {
+        Intent intent = new Intent(this, com.prm.flightbooking.webview.WebViewPaymentActivity.class);
+        intent.putExtra(com.prm.flightbooking.webview.WebViewPaymentActivity.EXTRA_URL, paymentUrl);
+        intent.putExtra("bookingId", bookingId); // Pass bookingId để xử lý result
+        startActivityForResult(intent, REQ_VNPAY);
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_VNPAY && resultCode == RESULT_OK) {
+            if (data != null) {
+                String status = data.getStringExtra("status");
+                String message = data.getStringExtra("message");
+                String transactionId = data.getStringExtra("transactionId");
+                String responseCode = data.getStringExtra("responseCode");
+                int bookingId = data.getIntExtra("bookingId", -1);
+                
+                Log.d(TAG, "Payment result - Status: " + status + ", Message: " + message);
+                
+                if ("success".equalsIgnoreCase(status)) {
+                    // Navigate to success result page
+                    Intent resultIntent = new Intent(this, PaymentResultActivity.class);
+                    resultIntent.putExtra(PaymentResultActivity.EXTRA_STATUS, "success");
+                    resultIntent.putExtra(PaymentResultActivity.EXTRA_MESSAGE, message != null ? message : "Thanh toán VNPay thành công");
+                    resultIntent.putExtra(PaymentResultActivity.EXTRA_BOOKING_ID, bookingId);
+                    if (transactionId != null) {
+                        resultIntent.putExtra("transactionId", transactionId);
+                    }
+                    startActivity(resultIntent);
+                    finish();
+                } else {
+                    // Navigate to failed result page
+                    Intent resultIntent = new Intent(this, PaymentResultActivity.class);
+                    resultIntent.putExtra(PaymentResultActivity.EXTRA_STATUS, "failed");
+                    resultIntent.putExtra(PaymentResultActivity.EXTRA_MESSAGE, message != null ? message : "Thanh toán VNPay thất bại");
+                    resultIntent.putExtra(PaymentResultActivity.EXTRA_BOOKING_ID, bookingId);
+                    if (transactionId != null) {
+                        resultIntent.putExtra("transactionId", transactionId);
+                    }
+                    if (responseCode != null) {
+                        resultIntent.putExtra("responseCode", responseCode);
+                    }
+                    startActivity(resultIntent);
+                    finish();
+                }
+            } else {
+                // Không có data, có thể user đã đóng WebView
+                Toast.makeText(this, "Thanh toán đã bị hủy", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == REQ_VNPAY && resultCode == RESULT_CANCELED) {
+            Toast.makeText(this, "Thanh toán đã bị hủy", Toast.LENGTH_SHORT).show();
+        }
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {

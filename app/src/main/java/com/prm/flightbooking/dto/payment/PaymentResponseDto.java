@@ -6,31 +6,31 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 public class PaymentResponseDto {
-    @SerializedName("BookingId")
+    @SerializedName("bookingId")
     private int bookingId;
     
-    @SerializedName("PaymentId")
+    @SerializedName("paymentId")
     private int paymentId;
     
-    @SerializedName("TransactionId")
+    @SerializedName("transactionId")
     private String transactionId;
     
-    @SerializedName("PaymentMethod")
+    @SerializedName("paymentMethod")
     private String paymentMethod;
     
-    @SerializedName("PaymentUrl")
+    @SerializedName("paymentUrl")
     private String paymentUrl;
     
-    @SerializedName("Status")
+    @SerializedName("status")
     private String status;
     
-    @SerializedName("Amount")
+    @SerializedName("amount")
     private BigDecimal amount;
     
-    @SerializedName("CreatedAt")
+    @SerializedName("createdAt")
     private Date createdAt;
     
-    @SerializedName("Notes")
+    @SerializedName("notes")
     private String notes;
 
     public PaymentResponseDto() {}

@@ -1,10 +1,10 @@
 package com.prm.flightbooking;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -67,6 +67,9 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.FlightView
         holder.tvDepartureTime.setText(timeFormat.format(flight.getDepartureTime()));
         holder.tvArrivalTime.setText(timeFormat.format(flight.getArrivalTime()));
 
+        // Hiển thị ngày tháng năm bay
+        holder.tvFlightDate.setText(dateFormat.format(flight.getDepartureTime()));
+
         // Lấy mã sân bay từ chuỗi mô tả (ví dụ: "Sân bay Nội Bài (HAN)" -> "HAN")
         String departureAirport = flight.getDepartureAirport().contains("(")
                 ? flight.getDepartureAirport().split(" \\(")[1].replace(")", "")
@@ -81,12 +84,29 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.FlightView
         // Hiển thị giá vé với định dạng tiền tệ
         holder.tvPrice.setText(String.format("%s VND", currencyFormat.format(flight.getBasePrice())));
 
-        // Hiển thị trạng thái chuyến bay
-        holder.tvStatus.setText(convertStatusToVietnamese(flight.getStatus()));
+        // Hiển thị trạng thái chuyến bay với màu sắc phù hợp
+        String status = flight.getStatus();
+        String statusText = convertStatusToVietnamese(status);
+        holder.tvStatus.setText(statusText);
+        
+        // Đặt màu cho status badge
+        int textColor = Color.WHITE;
+        int bgColor;
+        if ("CANCELLED".equalsIgnoreCase(status)) {
+            bgColor = Color.parseColor("#F44336"); // Red
+        } else if ("DELAYED".equalsIgnoreCase(status)) {
+            bgColor = Color.parseColor("#FF9800"); // Orange
+        } else if ("COMPLETED".equalsIgnoreCase(status)) {
+            bgColor = Color.parseColor("#757575"); // Gray
+        } else {
+            // SCHEDULED, PREPARING, DEPARTED
+            bgColor = Color.parseColor("#4CAF50"); // Green
+        }
+        holder.tvStatus.setTextColor(textColor);
+        holder.tvStatus.setBackgroundColor(bgColor);
 
         // Gán sự kiện click cho item nếu listener không null
         if (listener != null) {
-            String status = flight.getStatus();
             // Chặn đặt vé cho các chuyến bay: DELAYED, COMPLETED, CANCELLED, PREPARING, DEPARTED
             if ("COMPLETED".equalsIgnoreCase(status)
                     || "DELAYED".equalsIgnoreCase(status)
@@ -119,9 +139,12 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.FlightView
         return flightList != null ? flightList.size() : 0;
     }
 
+    // Định dạng ngày tháng năm
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("d 'Tháng' M, yyyy", new Locale("vi", "VN"));
+
     // ViewHolder chứa các view trong item_flight
     static class FlightViewHolder extends RecyclerView.ViewHolder {
-        TextView tvFlightNumber, tvAirline, tvDepartureTime, tvArrivalTime, tvDepartureAirport, tvArrivalAirport, tvPrice, tvStatus;
+        TextView tvFlightNumber, tvAirline, tvDepartureTime, tvArrivalTime, tvDepartureAirport, tvArrivalAirport, tvPrice, tvStatus, tvFlightDate;
 
         FlightViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -133,6 +156,7 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.FlightView
             tvArrivalAirport = itemView.findViewById(R.id.tv_arrival_airport);
             tvPrice = itemView.findViewById(R.id.tv_price);
             tvStatus = itemView.findViewById(R.id.tv_status);
+            tvFlightDate = itemView.findViewById(R.id.tv_flight_date);
         }
     }
 

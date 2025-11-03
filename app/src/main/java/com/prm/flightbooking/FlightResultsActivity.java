@@ -81,12 +81,11 @@ public class FlightResultsActivity extends AppCompatActivity {
 
     // Thiết lập TabLayout để phân loại chuyến bay
     private void setupTabLayout() {
-        // Thêm các tab
-        tabLayout.addTab(tabLayout.newTab().setText("Tất cả"));
+        // Thêm các tab - chỉ 4 tab theo yêu cầu
         tabLayout.addTab(tabLayout.newTab().setText("Đã lên lịch"));
         tabLayout.addTab(tabLayout.newTab().setText("Bị hoãn"));
-        tabLayout.addTab(tabLayout.newTab().setText("Đã hoàn thành"));
         tabLayout.addTab(tabLayout.newTab().setText("Đã hủy"));
+        tabLayout.addTab(tabLayout.newTab().setText("Đã hoàn thành"));
 
         // Xử lý khi chọn tab
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -95,19 +94,16 @@ public class FlightResultsActivity extends AppCompatActivity {
                 int position = tab.getPosition();
                 switch (position) {
                     case 0:
-                        currentFilter = "ALL";
-                        break;
-                    case 1:
                         currentFilter = "SCHEDULED";
                         break;
-                    case 2:
+                    case 1:
                         currentFilter = "DELAYED";
+                        break;
+                    case 2:
+                        currentFilter = "CANCELLED";
                         break;
                     case 3:
                         currentFilter = "COMPLETED";
-                        break;
-                    case 4:
-                        currentFilter = "CANCELLED";
                         break;
                 }
                 filterFlightsByStatus();
@@ -126,24 +122,21 @@ public class FlightResultsActivity extends AppCompatActivity {
     // Phân loại chuyến bay theo trạng thái
     private void categorizeFlights(List<FlightResponseDto> flights) {
         flightsByStatus.clear();
-        flightsByStatus.put("ALL", new ArrayList<>(flights));
         flightsByStatus.put("SCHEDULED", new ArrayList<>());
         flightsByStatus.put("DELAYED", new ArrayList<>());
         flightsByStatus.put("COMPLETED", new ArrayList<>());
         flightsByStatus.put("CANCELLED", new ArrayList<>());
-        flightsByStatus.put("PREPARING", new ArrayList<>());
-        flightsByStatus.put("DEPARTED", new ArrayList<>());
 
         for (FlightResponseDto flight : flights) {
             String status = flight.getStatus() != null ? flight.getStatus().toUpperCase(Locale.ROOT) : "UNKNOWN";
-            if (flightsByStatus.containsKey(status)) {
+            
+            // Phân loại vào tab tương ứng
+            if ("SCHEDULED".equals(status) || "PREPARING".equals(status) || "DEPARTED".equals(status)) {
+                flightsByStatus.get("SCHEDULED").add(flight);
+            } else if (flightsByStatus.containsKey(status)) {
                 flightsByStatus.get(status).add(flight);
             }
         }
-
-        // Thêm PREPARING và DEPARTED vào tab "Đã lên lịch" nếu muốn
-        flightsByStatus.get("SCHEDULED").addAll(flightsByStatus.get("PREPARING"));
-        flightsByStatus.get("SCHEDULED").addAll(flightsByStatus.get("DEPARTED"));
     }
 
     // Lọc chuyến bay theo trạng thái được chọn
@@ -165,8 +158,6 @@ public class FlightResultsActivity extends AppCompatActivity {
     // Lấy text hiển thị cho trạng thái
     private String getStatusText(String status) {
         switch (status) {
-            case "ALL":
-                return "";
             case "SCHEDULED":
                 return "đã lên lịch";
             case "DELAYED":
@@ -229,8 +220,9 @@ public class FlightResultsActivity extends AppCompatActivity {
         // Phân loại chuyến bay theo trạng thái
         categorizeFlights(allFlights);
 
-        // Hiển thị tất cả chuyến bay ban đầu
-        currentFilter = "ALL";
+        // Hiển thị tab "Đã lên lịch" ban đầu (tab đầu tiên)
+        currentFilter = "SCHEDULED";
+        tabLayout.getTabAt(0).select(); // Chọn tab đầu tiên
         filterFlightsByStatus();
 
         Toast.makeText(this, "Tìm thấy " + allFlights.size() + " chuyến bay", Toast.LENGTH_SHORT).show();

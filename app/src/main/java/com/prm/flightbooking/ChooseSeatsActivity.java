@@ -29,7 +29,9 @@ import com.prm.flightbooking.models.SeatClass;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Locale;
 
 import retrofit2.Call;
@@ -328,6 +330,19 @@ public class ChooseSeatsActivity extends AppCompatActivity {
             }
 
             passengerDetails.add(new PassengerInfoDto(name, idNumber.isEmpty() ? null : idNumber));
+        }
+
+        // Validate duplicate CCCD/CMND when booking for 2 or more passengers
+        if (passengerDetails.size() >= 2) {
+            Set<String> seenIds = new HashSet<>();
+            for (int i = 0; i < passengerDetails.size(); i++) {
+                String id = passengerDetails.get(i).getPassengerIdNumber();
+                if (id == null || id.trim().isEmpty()) continue; // optional field, skip empties
+                if (!seenIds.add(id)) {
+                    Toast.makeText(this, "Số CMND/CCCD của các hành khách không được trùng nhau", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
         }
 
         int seatClassId = getSeatClassId(spinnerSeatClass.getSelectedItem().toString());

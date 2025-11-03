@@ -3,19 +3,19 @@ package com.prm.flightbooking.dto.payment;
 import com.google.gson.annotations.SerializedName;
 
 public class CreatePaymentDto {
-    @SerializedName("BookingId")
+    @SerializedName("bookingId")
     private int bookingId;
     
-    @SerializedName("PaymentMethod")
+    @SerializedName("paymentMethod")
     private String paymentMethod;
     
-    @SerializedName("ReturnUrl")
+    @SerializedName("returnUrl")
     private String returnUrl;
     
-    @SerializedName("CancelUrl")
+    @SerializedName("cancelUrl")
     private String cancelUrl;
 
-    @SerializedName("BankCode")
+    @SerializedName("bankCode")
     private String bankCode;
 
     public CreatePaymentDto() {}
