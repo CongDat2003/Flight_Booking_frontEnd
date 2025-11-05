@@ -18,13 +18,26 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClient {
     private static final String ANDROID_STUDIO_BASE_URL = "http://10.0.2.2:501/api/";
     private static final String BLUESTACKS_BASE_URL = "http://10.0.2.2:501/api/";
-    // IP của máy tính đang chạy API server
+    
+    // ============================================
+    // QUAN TRỌNG: CẬP NHẬT IP NÀY!
+    // ============================================
+    // Để tìm IP của máy tính:
+    // 1. Mở Command Prompt (cmd)
+    // 2. Chạy lệnh: ipconfig
+    // 3. Tìm "IPv4 Address" trong phần adapter đang dùng (WiFi hoặc Ethernet)
+    // 4. Thay IP bên dưới bằng IP bạn vừa tìm được
+    // Ví dụ: nếu IP là 192.168.1.100, thay thành: "http://192.168.1.100:501/api/"
+    // ============================================
     private static final String REAL_IP_BASE_URL = "http://192.168.10.9:501/api/";
     private static final String LOCALHOST_BASE_URL = "http://10.0.2.2:501/api/";
     
     // Danh sách các IP dự phòng để thử (theo thứ tự ưu tiên)
+    // Có thể thêm nhiều IP vào đây để tự động thử
     private static final String[] FALLBACK_IPS = {
-        "http://192.168.10.9:501/api/",  // IP chính
+        "http://192.168.10.9:501/api/",   // IP chính
+        "http://192.168.1.100:501/api/",  // IP dự phòng 1
+        "http://192.168.0.100:501/api/",  // IP dự phòng 2
         "http://10.0.2.2:501/api/",       // Emulator fallback
     };
 
@@ -112,7 +125,21 @@ public class RetrofitClient {
         
         // Nếu chạy trên thiết bị thật, dùng IP cấu hình
         // Lưu ý: Cần đảm bảo API server đang chạy và thiết bị ở cùng mạng LAN
+        // Nếu gặp lỗi kết nối, hãy kiểm tra:
+        // 1. API server có đang chạy không? (http://localhost:501/swagger)
+        // 2. IP trong REAL_IP_BASE_URL có đúng không? (chạy ipconfig trên Windows)
+        // 3. Thiết bị và máy tính có cùng mạng WiFi/LAN không?
+        // 4. Firewall có chặn cổng 501 không?
         return REAL_IP_BASE_URL;
+    }
+    
+    /**
+     * Thử kết nối với các IP dự phòng nếu IP chính thất bại
+     * Có thể gọi method này khi gặp lỗi kết nối
+     */
+    public static void tryFallbackUrls() {
+        retrofitInstance = null; // Reset để thử lại
+        // Logic thử các IP dự phòng có thể được implement ở đây
     }
     
     /**

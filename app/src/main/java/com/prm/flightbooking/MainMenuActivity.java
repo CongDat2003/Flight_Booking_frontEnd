@@ -12,7 +12,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.prm.flightbooking.api.ApiServiceProvider;
@@ -26,10 +25,11 @@ public class MainMenuActivity extends AppCompatActivity {
 
     private TextView tvWelcome, tvUsername;
     private ImageView ivAvatar;
+    // Legacy views (may be null in redesigned layout)
     private Button btnBannerBook;
     private LinearLayout menuBookFlight, menuMyTrips, menuNotifications, menuProfile, menuAIPlan;
-    private BottomNavigationView bottomNavigation;
     private TextView tvNotificationsBadge;
+    private BottomNavigationView bottomNavigation;
 
     // API và SharedPreferences
     private NotificationApiEndpoint notificationApi;
@@ -60,24 +60,27 @@ public class MainMenuActivity extends AppCompatActivity {
         tvWelcome = findViewById(R.id.tv_welcome);
         tvUsername = findViewById(R.id.tv_username);
         ivAvatar = findViewById(R.id.iv_avatar);
+        // Legacy ids (may be absent)
         btnBannerBook = findViewById(R.id.btn_banner_book);
         menuBookFlight = findViewById(R.id.menu_book_flight);
         menuMyTrips = findViewById(R.id.menu_my_trips);
         menuNotifications = findViewById(R.id.menu_notifications);
         menuProfile = findViewById(R.id.menu_profile);
-        bottomNavigation = findViewById(R.id.bottom_navigation);
         tvNotificationsBadge = findViewById(R.id.tv_notifications_badge);
         menuAIPlan = findViewById((R.id.menu_ai_plan));
+
+        bottomNavigation = findViewById(R.id.bottom_navigation);
     }
 
     private void bindingAction() {
-        btnBannerBook.setOnClickListener(this::onBannerBookClick);
-        menuBookFlight.setOnClickListener(this::onBookFlightClick);
-        menuMyTrips.setOnClickListener(this::onMyTripsClick);
-        menuNotifications.setOnClickListener(this::onNotificationsClick);
-        menuProfile.setOnClickListener(this::onProfileClick);
-        ivAvatar.setOnClickListener(this::onAvatarClick);
-        menuAIPlan.setOnClickListener(this::OnAITripPlan);
+        if (btnBannerBook != null) btnBannerBook.setOnClickListener(this::onBannerBookClick);
+        if (menuBookFlight != null) menuBookFlight.setOnClickListener(this::onBookFlightClick);
+        if (menuMyTrips != null) menuMyTrips.setOnClickListener(this::onMyTripsClick);
+        if (menuNotifications != null) menuNotifications.setOnClickListener(this::onNotificationsClick);
+        if (menuProfile != null) menuProfile.setOnClickListener(this::onProfileClick);
+        if (ivAvatar != null) ivAvatar.setOnClickListener(this::onAvatarClick);
+        if (menuAIPlan != null) menuAIPlan.setOnClickListener(this::OnAITripPlan);
+
         bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             handleBottomNavigation(itemId);
@@ -190,6 +193,7 @@ public class MainMenuActivity extends AppCompatActivity {
 
     // Cập nhật badge thông báo
     private void updateNotificationsBadge(int unreadCount) {
+        if (tvNotificationsBadge == null) return;
         if (unreadCount > 0) {
             tvNotificationsBadge.setVisibility(View.VISIBLE);
             if (unreadCount > 99) {

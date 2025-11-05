@@ -20,7 +20,7 @@
         <!-- Real device - Local IP -->
         <domain includeSubdomains="true">192.168.78.117</domain>
         <domain includeSubdomains="true">192.168.10.96</domain>
-        <domain includeSubdomains="true">192.168.10.9</domain>
+        <domain includeSubdomains="true">172.20.10.5</domain>
         <domain includeSubdomains="true">192.168.10.0/24</domain>
     </domain-config>
     
