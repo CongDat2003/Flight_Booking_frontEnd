@@ -53,4 +53,5 @@ dependencies {
     implementation("org.apache.poi:poi-ooxml:5.3.0")
     implementation("org.apache.xmlbeans:xmlbeans:5.2.1")
     implementation("org.apache.logging.log4j:log4j-api:2.13.3")
+    implementation("com.squareup.picasso:picasso:2.71828")
 }
