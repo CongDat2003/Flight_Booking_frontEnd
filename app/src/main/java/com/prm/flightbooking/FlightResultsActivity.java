@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.gson.Gson;
 import com.prm.flightbooking.dto.advancedsearch.FlightSearchResultDto;
@@ -25,8 +26,9 @@ import java.util.Map;
 public class FlightResultsActivity extends AppCompatActivity {
 
     private RecyclerView rvFlights;
-    private TextView tvHeader;
-    private ImageButton btnBack;
+    private MaterialButton btnBack;
+    private TextView tvHeaderTitle;
+    private TextView tvHeaderSubtitle;
     private TabLayout tabLayout;
     private FlightAdapter flightAdapter;
     private SharedPreferences sharedPreferences;
@@ -59,13 +61,16 @@ public class FlightResultsActivity extends AppCompatActivity {
 
     private void bindingView() {
         rvFlights = findViewById(R.id.rv_flights);
-        tvHeader = findViewById(R.id.tv_header);
         btnBack = findViewById(R.id.btn_back);
+        tvHeaderTitle = findViewById(R.id.tv_header_title);
+        tvHeaderSubtitle = findViewById(R.id.tv_header_subtitle);
         tabLayout = findViewById(R.id.tab_layout);
     }
 
     private void bindingAction() {
-        btnBack.setOnClickListener(view -> finish());
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
     }
 
     // Thiết lập RecyclerView
@@ -81,11 +86,11 @@ public class FlightResultsActivity extends AppCompatActivity {
 
     // Thiết lập TabLayout để phân loại chuyến bay
     private void setupTabLayout() {
-        // Thêm các tab - chỉ 4 tab theo yêu cầu
+        // 4 tab theo yêu cầu: Tất cả, Đã lên lịch, Bị hủy, Bị hoãn
+        tabLayout.addTab(tabLayout.newTab().setText("Tất cả"));
         tabLayout.addTab(tabLayout.newTab().setText("Đã lên lịch"));
+        tabLayout.addTab(tabLayout.newTab().setText("Bị hủy"));
         tabLayout.addTab(tabLayout.newTab().setText("Bị hoãn"));
-        tabLayout.addTab(tabLayout.newTab().setText("Đã hủy"));
-        tabLayout.addTab(tabLayout.newTab().setText("Đã hoàn thành"));
 
         // Xử lý khi chọn tab
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -94,16 +99,16 @@ public class FlightResultsActivity extends AppCompatActivity {
                 int position = tab.getPosition();
                 switch (position) {
                     case 0:
-                        currentFilter = "SCHEDULED";
+                        currentFilter = "ALL";
                         break;
                     case 1:
-                        currentFilter = "DELAYED";
+                        currentFilter = "SCHEDULED";
                         break;
                     case 2:
                         currentFilter = "CANCELLED";
                         break;
                     case 3:
-                        currentFilter = "COMPLETED";
+                        currentFilter = "DELAYED";
                         break;
                 }
                 filterFlightsByStatus();
@@ -124,24 +129,37 @@ public class FlightResultsActivity extends AppCompatActivity {
         flightsByStatus.clear();
         flightsByStatus.put("SCHEDULED", new ArrayList<>());
         flightsByStatus.put("DELAYED", new ArrayList<>());
-        flightsByStatus.put("COMPLETED", new ArrayList<>());
         flightsByStatus.put("CANCELLED", new ArrayList<>());
 
         for (FlightResponseDto flight : flights) {
             String status = flight.getStatus() != null ? flight.getStatus().toUpperCase(Locale.ROOT) : "UNKNOWN";
             
             // Phân loại vào tab tương ứng
-            if ("SCHEDULED".equals(status) || "PREPARING".equals(status) || "DEPARTED".equals(status)) {
+            if ("SCHEDULED".equals(status) || "CONFIRMED".equals(status) || "PREPARING".equals(status) || "DEPARTED".equals(status)) {
+                // Gom các trạng thái "đã lên lịch" vào tab "Đã lên lịch"
                 flightsByStatus.get("SCHEDULED").add(flight);
-            } else if (flightsByStatus.containsKey(status)) {
-                flightsByStatus.get(status).add(flight);
+            } else if ("DELAYED".equals(status) || "POSTPONED".equals(status)) {
+                // Trạng thái "bị hoãn"
+                flightsByStatus.get("DELAYED").add(flight);
+            } else if ("CANCELLED".equals(status) || "CANCELED".equals(status)) {
+                // Trạng thái "đã hủy"
+                flightsByStatus.get("CANCELLED").add(flight);
             }
+            // COMPLETED và các trạng thái khác không được thêm vào bất kỳ tab nào
+            // (người dùng có thể xem trong tab "Tất cả")
         }
     }
 
     // Lọc chuyến bay theo trạng thái được chọn
     private void filterFlightsByStatus() {
-        List<FlightResponseDto> filteredFlights = flightsByStatus.getOrDefault(currentFilter, new ArrayList<>());
+        List<FlightResponseDto> filteredFlights;
+        if ("ALL".equals(currentFilter)) {
+            // Tab "Tất cả" - hiển thị tất cả chuyến bay
+            filteredFlights = new ArrayList<>(allFlights);
+        } else {
+            // Các tab khác - lọc theo trạng thái
+            filteredFlights = flightsByStatus.getOrDefault(currentFilter, new ArrayList<>());
+        }
         flightAdapter.setFlights(filteredFlights);
         
         // Cập nhật header
@@ -151,19 +169,21 @@ public class FlightResultsActivity extends AppCompatActivity {
     // Cập nhật header với số lượng chuyến bay
     private void updateHeader(int count) {
         String statusText = getStatusText(currentFilter);
-        String headerMessage = String.format("Tìm thấy %d chuyến bay %s", count, statusText);
-        tvHeader.setText(headerMessage);
+        String headerMessage = String.format("Tìm thấy %d chuyến bay", count);
+        if (tvHeaderSubtitle != null) {
+            tvHeaderSubtitle.setText(headerMessage);
+        }
     }
 
     // Lấy text hiển thị cho trạng thái
     private String getStatusText(String status) {
         switch (status) {
+            case "ALL":
+                return "tất cả";
             case "SCHEDULED":
                 return "đã lên lịch";
             case "DELAYED":
                 return "bị hoãn";
-            case "COMPLETED":
-                return "đã hoàn thành";
             case "CANCELLED":
                 return "đã hủy";
             default:
@@ -220,9 +240,11 @@ public class FlightResultsActivity extends AppCompatActivity {
         // Phân loại chuyến bay theo trạng thái
         categorizeFlights(allFlights);
 
-        // Hiển thị tab "Đã lên lịch" ban đầu (tab đầu tiên)
-        currentFilter = "SCHEDULED";
-        tabLayout.getTabAt(0).select(); // Chọn tab đầu tiên
+        // Hiển thị mặc định tab "Tất cả"
+        currentFilter = "ALL";
+        if (tabLayout.getTabCount() > 0) {
+            tabLayout.getTabAt(0).select(); // Chọn tab đầu tiên (Tất cả)
+        }
         filterFlightsByStatus();
 
         Toast.makeText(this, "Tìm thấy " + allFlights.size() + " chuyến bay", Toast.LENGTH_SHORT).show();
@@ -232,14 +254,18 @@ public class FlightResultsActivity extends AppCompatActivity {
     // Hiển thị thông báo không có kết quả
     private void showNoResultsMessage() {
         String noResultsMessage = "Không tìm thấy chuyến bay nào";
-        tvHeader.setText(noResultsMessage);
+        if (tvHeaderSubtitle != null) {
+            tvHeaderSubtitle.setText(noResultsMessage);
+        }
         Toast.makeText(this, noResultsMessage, Toast.LENGTH_SHORT).show();
     }
 
     // Xử lý lỗi phân tích dữ liệu
     private void handleParseError(Exception e) {
         String errorMessage = "Lỗi xử lý dữ liệu tìm kiếm";
-        tvHeader.setText(errorMessage);
+        if (tvHeaderSubtitle != null) {
+            tvHeaderSubtitle.setText(errorMessage);
+        }
         Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
     }
 

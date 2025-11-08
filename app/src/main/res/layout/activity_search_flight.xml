@@ -5,31 +5,41 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="?attr/colorSurface"
     tools:context=".SearchFlightActivity">
 
-    <!-- Header Background -->
-    <ImageView
-        android:id="@+id/header_background"
+    <!-- Header Background with Gradient Overlay -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/header_container"
         android:layout_width="0dp"
-        android:layout_height="200dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/pic_travel_vertical"
+        android:layout_height="240dp"
+        android:background="@drawable/header_gradient_blue"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <ImageView
-        android:id="@+id/user_avatar"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="40dp"
-        android:background="@drawable/circle_bg"
-        android:scaleType="centerCrop"
-        android:clipToOutline="true"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        <ImageView
+            android:id="@+id/header_background"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/pic_travel_vertical"
+            android:alpha="0.3"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/header_overlay_gradient"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageButton
         android:id="@+id/btn_back"
@@ -40,30 +50,62 @@
         android:contentDescription="Quay lại"
         android:padding="10dp"
         android:scaleType="centerInside"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginStart="25dp"
-        android:layout_marginTop="46dp"/>
+        app:layout_constraintStart_toStartOf="@id/header_container"
+        app:layout_constraintTop_toTopOf="@id/header_container"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="50dp"/>
 
-    <TextView
-        android:id="@+id/user_name"
+    <LinearLayout
+        android:id="@+id/user_info_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:text="Guest"
-        android:textColor="#FF6600"
-        android:textSize="18sp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="@id/header_container"
+        app:layout_constraintTop_toBottomOf="@id/btn_back">
+
+        <ImageView
+            android:id="@+id/user_avatar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/circle_bg"
+            android:scaleType="centerCrop"
+            android:clipToOutline="true" />
+
+        <TextView
+            android:id="@+id/user_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="Guest"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_header_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="12dp"
+        android:text="Đặt vé máy bay"
+        android:textColor="#FFFFFF"
+        android:textSize="28sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toEndOf="@id/user_avatar"
-        app:layout_constraintTop_toTopOf="@id/user_avatar"
-        app:layout_constraintBottom_toBottomOf="@id/user_avatar" />
+        app:layout_constraintStart_toStartOf="@id/header_container"
+        app:layout_constraintEnd_toEndOf="@id/header_container"
+        app:layout_constraintTop_toBottomOf="@id/user_info_container" />
 
     <!-- ScrollView for the form content -->
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintTop_toBottomOf="@id/header_background"
+        app:layout_constraintTop_toBottomOf="@id/header_container"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -74,23 +116,24 @@
             android:orientation="vertical">
 
             <!-- Main Form Card -->
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_booking_form"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:layout_marginTop="20dp"
-                android:background="#FFFFFF"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="8dp"
-                app:cardUseCompatPadding="true">
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="-40dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="12dp"
+                app:cardUseCompatPadding="true"
+                app:cardBackgroundColor="#FFFFFF"
+                app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="24dp">
 
                     <!-- From Section -->
                     <TextView
@@ -413,20 +456,25 @@
                     </LinearLayout>
 
                     <!-- Search Button -->
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_search_flights"
                         android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:background="@drawable/btn_search"
-                        android:elevation="2dp"
+                        android:layout_height="60dp"
                         android:text="Tìm chuyến bay"
+                        android:textAllCaps="false"
                         android:textColor="#FFFFFF"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.02"
+                        app:cornerRadius="16dp"
+                        app:backgroundTint="#0077D7"
+                        android:elevation="4dp"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp" />
 
                 </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 

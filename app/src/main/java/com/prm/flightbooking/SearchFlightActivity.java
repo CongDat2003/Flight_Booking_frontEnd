@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.WindowCompat;
 
 import com.google.gson.Gson;
 import com.prm.flightbooking.api.AdvancedSearchApiEndpoint;
@@ -62,6 +63,8 @@ public class SearchFlightActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Edge-to-edge
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         setContentView(R.layout.activity_search_flight);
 
         // Khởi tạo API services

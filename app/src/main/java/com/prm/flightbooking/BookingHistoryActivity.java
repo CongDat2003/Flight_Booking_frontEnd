@@ -43,6 +43,7 @@ public class BookingHistoryActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private LinearLayout emptyState;
     private TextView tvNoBookings;
+    private TextView tvTotalBookings, tvUpcomingBookings, tvCompletedBookings;
     private ImageButton btnBack, btnFilter;
     private TextInputEditText etSearch;
     private CardView chipAll, chipUpcoming, chipCompleted, chipCancelled;
@@ -87,6 +88,9 @@ public class BookingHistoryActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progress_bar);
         emptyState = findViewById(R.id.empty_state);
         tvNoBookings = findViewById(R.id.tv_no_bookings);
+        tvTotalBookings = findViewById(R.id.tv_total_bookings);
+        tvUpcomingBookings = findViewById(R.id.tv_upcoming_bookings);
+        tvCompletedBookings = findViewById(R.id.tv_completed_bookings);
         btnBack = findViewById(R.id.btn_back);
         btnFilter = findViewById(R.id.btn_filter);
         etSearch = findViewById(R.id.et_search);
@@ -272,6 +276,7 @@ public class BookingHistoryActivity extends AppCompatActivity {
                     }
                     bookingList.addAll(bookings);
                     Log.d("BookingHistory", "After fetch: bookingList size = " + bookingList.size());
+                    updateBookingStats();
                     filterBookings(etSearch.getText().toString());
                     Log.d("BookingHistory", "After filter: filteredList size = " + filteredList.size());
                 } else {
@@ -319,6 +324,34 @@ public class BookingHistoryActivity extends AppCompatActivity {
         } else {
             emptyState.setVisibility(View.GONE);
             rvBookingHistory.setVisibility(View.VISIBLE);
+        }
+    }
+    
+    // Update booking statistics
+    private void updateBookingStats() {
+        int total = bookingList.size();
+        int upcoming = 0;
+        int completed = 0;
+        
+        for (UserBookingHistoryDto booking : bookingList) {
+            String status = booking.getBookingStatus();
+            if (status != null) {
+                if (status.equalsIgnoreCase("Confirmed")) {
+                    upcoming++;
+                } else if (status.equalsIgnoreCase("Completed")) {
+                    completed++;
+                }
+            }
+        }
+        
+        if (tvTotalBookings != null) {
+            tvTotalBookings.setText(String.valueOf(total));
+        }
+        if (tvUpcomingBookings != null) {
+            tvUpcomingBookings.setText(String.valueOf(upcoming));
+        }
+        if (tvCompletedBookings != null) {
+            tvCompletedBookings.setText(String.valueOf(completed));
         }
     }
 

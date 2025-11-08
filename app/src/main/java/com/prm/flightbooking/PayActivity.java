@@ -27,17 +27,20 @@ import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.prm.flightbooking.api.ApiServiceProvider;
 import com.prm.flightbooking.api.BookingApiEndpoint;
 import com.prm.flightbooking.api.PaymentApiEndpoint;
+import com.prm.flightbooking.api.ServiceApiEndpoint;
 import com.prm.flightbooking.dto.booking.BookingDetailDto;
 import com.prm.flightbooking.dto.booking.FlightDetailDto;
 import com.prm.flightbooking.dto.booking.PassengerSeatDto;
 import com.prm.flightbooking.dto.payment.CreatePaymentDto;
 import com.prm.flightbooking.dto.payment.PaymentResponseDto;
+import com.prm.flightbooking.dto.service.BookingServiceDto;
 import com.prm.flightbooking.dialogs.PaymentMethodSelectionDialog;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import retrofit2.Call;
@@ -50,7 +53,7 @@ public class PayActivity extends AppCompatActivity {
     private TextView tvTicketDetailTitle, tvJfkCode, tvLosAngelesCity, tvLaxCode, tvFlightTime;
     private TextView tvOriginCity, tvFlightDate, tvFlightTimeValue;
     private TextView tvFlightClass, tvSeatsNumber, tvAirlineName, tvTicketPrice;
-    private TextView tvBarcodeNumber;
+    private TextView tvBarcodeNumber, tvFlightPrice, tvServicesPrice, tvTotalPrice;
     private ImageView ivDeltaLogo, ivPlaneIcon, ivQrCode, ivBarcode;
     private ImageButton btnBack;
     private Button btnDownloadTicket, btnPayLater, btnPayNow;
@@ -59,6 +62,7 @@ public class PayActivity extends AppCompatActivity {
     // API service and data
     private BookingApiEndpoint bookingApi;
     private PaymentApiEndpoint paymentApi;
+    private ServiceApiEndpoint serviceApi;
     private SharedPreferences sharedPreferences;
     private int userId;
     private int bookingId;
@@ -75,6 +79,7 @@ public class PayActivity extends AppCompatActivity {
         // Initialize API service and SharedPreferences
         bookingApi = ApiServiceProvider.getBookingApi();
         paymentApi = ApiServiceProvider.getPaymentApi();
+        serviceApi = ApiServiceProvider.getServiceApi();
         sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE);
 
         // Check login status
@@ -138,6 +143,9 @@ public class PayActivity extends AppCompatActivity {
         tvAirlineName = findViewById(R.id.text_view_airline_name);
         tvTicketPrice = findViewById(R.id.text_view_ticket_price);
         tvBarcodeNumber = findViewById(R.id.text_view_barcode_number);
+        tvFlightPrice = findViewById(R.id.text_view_flight_price);
+        tvServicesPrice = findViewById(R.id.text_view_services_price);
+        tvTotalPrice = findViewById(R.id.text_view_total_price);
         ivDeltaLogo = findViewById(R.id.image_view_delta_logo);
         ivPlaneIcon = findViewById(R.id.image_view_plane_icon);
         ivQrCode = findViewById(R.id.image_view_qr_code);
@@ -299,9 +307,12 @@ public class PayActivity extends AppCompatActivity {
             tvSeatsNumber.setText("N/A");
         }
 
-        // Update price
+        // Update price - will be updated after loading services
         BigDecimal totalAmount = bookingDetail.getTotalAmount();
         tvTicketPrice.setText(totalAmount != null ? currencyFormat.format(totalAmount) + " VND" : "Chưa có thông tin");
+        
+        // Load booking services to calculate breakdown
+        loadBookingServices(bookingId, totalAmount);
 
         // Update barcode number (use booking reference as a placeholder)
         tvBarcodeNumber.setText(bookingDetail.getBookingReference());
@@ -583,6 +594,49 @@ public class PayActivity extends AppCompatActivity {
         } else if (requestCode == REQ_VNPAY && resultCode == RESULT_CANCELED) {
             Toast.makeText(this, "Thanh toán đã bị hủy", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    // Load booking services and update price breakdown
+    private void loadBookingServices(int bookingId, BigDecimal totalAmount) {
+        Call<List<BookingServiceDto>> call = serviceApi.getBookingServices(bookingId);
+        call.enqueue(new Callback<List<BookingServiceDto>>() {
+            @Override
+            public void onResponse(Call<List<BookingServiceDto>> call, Response<List<BookingServiceDto>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<BookingServiceDto> services = response.body();
+                    BigDecimal servicesTotal = BigDecimal.ZERO;
+                    for (BookingServiceDto service : services) {
+                        if (service.getPrice() != null) {
+                            servicesTotal = servicesTotal.add(service.getPrice());
+                        }
+                    }
+                    
+                    // Calculate flight price (total - services)
+                    BigDecimal flightPrice = totalAmount != null ? totalAmount.subtract(servicesTotal) : BigDecimal.ZERO;
+                    
+                    // Update UI
+                    if (tvFlightPrice != null) {
+                        tvFlightPrice.setText(currencyFormat.format(flightPrice) + " VND");
+                    }
+                    if (tvServicesPrice != null) {
+                        tvServicesPrice.setText(currencyFormat.format(servicesTotal) + " VND");
+                    }
+                    if (tvTotalPrice != null) {
+                        tvTotalPrice.setText(currencyFormat.format(totalAmount) + " VND");
+                    }
+                    // Also update main price display
+                    tvTicketPrice.setText(currencyFormat.format(totalAmount) + " VND");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<BookingServiceDto>> call, Throwable t) {
+                // If failed, just show total amount
+                if (totalAmount != null) {
+                    tvTicketPrice.setText(currencyFormat.format(totalAmount) + " VND");
+                }
+            }
+        });
     }
 
     // Show QR Code payment dialog (existing functionality)

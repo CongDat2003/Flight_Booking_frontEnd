@@ -33,6 +33,20 @@
             android:scaleType="centerInside"
             android:src="@drawable/ic_arrow_back" />
 
+        <!-- Nút Refresh -->
+        <ImageButton
+            android:id="@+id/btn_refresh"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="40dp"
+            android:background="@drawable/btn_back_white_circle"
+            android:contentDescription="Làm mới chat"
+            android:padding="12dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_refresh" />
+
         <!-- Tiêu đề -->
         <TextView
             android:id="@+id/tv_chat_title"

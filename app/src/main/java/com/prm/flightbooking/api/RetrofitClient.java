@@ -1,5 +1,7 @@
 package com.prm.flightbooking.api;
 
+import android.util.Log;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -16,6 +18,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
+    private static final String TAG = "RetrofitClient";
     private static final String ANDROID_STUDIO_BASE_URL = "http://10.0.2.2:501/api/";
     private static final String BLUESTACKS_BASE_URL = "http://10.0.2.2:501/api/";
     
@@ -36,8 +39,8 @@ public class RetrofitClient {
     // Có thể thêm nhiều IP vào đây để tự động thử
     private static final String[] FALLBACK_IPS = {
         "http://192.168.10.9:501/api/",   // IP chính
-        "http://192.168.1.100:501/api/",  // IP dự phòng 1
-        "http://192.168.0.100:501/api/",  // IP dự phòng 2
+        "http://192.168.10.50:501/api/",  // IP dự phòng 1
+        "http://192.168.10.100:501/api/", // IP dự phòng 2
         "http://10.0.2.2:501/api/",       // Emulator fallback
     };
 
@@ -51,6 +54,7 @@ public class RetrofitClient {
                     .create();
 
             String baseUrl = getBaseUrl();
+            Log.d(TAG, "Initializing Retrofit with base URL: " + baseUrl);
 
             // Cấu hình OkHttpClient để trust all certificates (chỉ cho development)
             OkHttpClient httpClient = getUnsafeOkHttpClient();
@@ -60,6 +64,8 @@ public class RetrofitClient {
                     .client(httpClient)
                     .addConverterFactory(GsonConverterFactory.create(gson))
                     .build();
+            
+            Log.d(TAG, "Retrofit instance created successfully");
         }
         return retrofitInstance;
     }
@@ -108,19 +114,44 @@ public class RetrofitClient {
 
     private static String getBaseUrl() {
         // Detect môi trường chạy
-        String emulator = android.os.Build.PRODUCT;
-        String manufacturer = android.os.Build.MANUFACTURER;
+        String emulator = android.os.Build.PRODUCT != null ? android.os.Build.PRODUCT.toLowerCase() : "";
+        String manufacturer = android.os.Build.MANUFACTURER != null ? android.os.Build.MANUFACTURER.toLowerCase() : "";
+        String model = android.os.Build.MODEL != null ? android.os.Build.MODEL.toLowerCase() : "";
+        String brand = android.os.Build.BRAND != null ? android.os.Build.BRAND.toLowerCase() : "";
+        String device = android.os.Build.DEVICE != null ? android.os.Build.DEVICE.toLowerCase() : "";
+        String hardware = android.os.Build.HARDWARE != null ? android.os.Build.HARDWARE.toLowerCase() : "";
         
-        // Kiểm tra nếu là Android Emulator
-        if (emulator.contains("sdk") || emulator.contains("generic")) {
+        // Log device info for debugging
+        Log.d(TAG, "Device Detection - PRODUCT: " + android.os.Build.PRODUCT + 
+                   ", MANUFACTURER: " + android.os.Build.MANUFACTURER + 
+                   ", MODEL: " + android.os.Build.MODEL + 
+                   ", BRAND: " + android.os.Build.BRAND + 
+                   ", DEVICE: " + android.os.Build.DEVICE + 
+                   ", HARDWARE: " + android.os.Build.HARDWARE);
+        
+        // Kiểm tra nếu là Android Emulator (Android Studio AVD)
+        if (emulator.contains("sdk") || emulator.contains("generic") || 
+            emulator.contains("emulator") || device.contains("generic") ||
+            hardware.contains("goldfish") || hardware.contains("ranchu")) {
             // Emulator luôn dùng 10.0.2.2 để truy cập localhost máy host
+            Log.d(TAG, "Detected Android Studio Emulator, using: " + ANDROID_STUDIO_BASE_URL);
             return ANDROID_STUDIO_BASE_URL;
         }
         
-        // Nếu chạy trên Bluestacks
-        if (manufacturer.toLowerCase().contains("bluestacks") ||
-            emulator.toLowerCase().contains("bluestacks")) {
+        // Nếu chạy trên Bluestacks (kiểm tra nhiều cách)
+        if (manufacturer.contains("bluestacks") || emulator.contains("bluestacks") ||
+            model.contains("bluestacks") || brand.contains("bluestacks") ||
+            device.contains("bluestacks") || hardware.contains("bluestacks")) {
+            Log.d(TAG, "Detected BlueStacks, using: " + BLUESTACKS_BASE_URL);
             return BLUESTACKS_BASE_URL;
+        }
+        
+        // Kiểm tra các emulator khác (Nox, LDPlayer, etc.)
+        if (manufacturer.contains("nox") || manufacturer.contains("ldplayer") ||
+            manufacturer.contains("mumu") || manufacturer.contains("memu") ||
+            model.contains("nox") || model.contains("ldplayer")) {
+            Log.d(TAG, "Detected other emulator, using: " + BLUESTACKS_BASE_URL);
+            return BLUESTACKS_BASE_URL; // Cũng dùng 10.0.2.2 cho các emulator khác
         }
         
         // Nếu chạy trên thiết bị thật, dùng IP cấu hình
@@ -130,7 +161,24 @@ public class RetrofitClient {
         // 2. IP trong REAL_IP_BASE_URL có đúng không? (chạy ipconfig trên Windows)
         // 3. Thiết bị và máy tính có cùng mạng WiFi/LAN không?
         // 4. Firewall có chặn cổng 501 không?
+        Log.d(TAG, "Detected real device, using: " + REAL_IP_BASE_URL);
         return REAL_IP_BASE_URL;
+    }
+    
+    /**
+     * Get base URL without /api/ suffix (for image loading, etc.)
+     * @return Base URL like "http://10.0.2.2:501" or "http://192.168.10.9:501"
+     */
+    public static String getBaseUrlWithoutApi() {
+        String baseUrl = getBaseUrl();
+        // Remove /api/ suffix if present
+        if (baseUrl.endsWith("/api/")) {
+            return baseUrl.substring(0, baseUrl.length() - 5);
+        }
+        if (baseUrl.endsWith("/api")) {
+            return baseUrl.substring(0, baseUrl.length() - 4);
+        }
+        return baseUrl;
     }
     
     /**

@@ -1,9 +1,31 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.FlightBooking" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <!-- Edge-to-edge -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+
+        <!-- Shapes -->
+        <item name="shapeAppearanceSmallComponent">@style/Shape.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/Shape.Medium</item>
+        <item name="shapeAppearanceLargeComponent">@style/Shape.Large</item>
     </style>
 
     <style name="Theme.FlightBooking" parent="Base.Theme.FlightBooking" />
+
+    <!-- Fallback base style to satisfy any @style/Shape references -->
+    <style name="Shape" />
+
+    <style name="Shape.Small">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+    <style name="Shape.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+    <style name="Shape.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
 </resources>

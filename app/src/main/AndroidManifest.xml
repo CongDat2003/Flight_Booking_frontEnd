@@ -71,6 +71,10 @@
             android:name=".EditProfileActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".TravelPreferencesActivity"
+            android:exported="false" />
+
         <!-- 5. FLIGHT BOOKING FLOW - Luồng đặt vé máy bay -->
         <activity
             android:name=".SearchFlightActivity"
@@ -86,6 +90,10 @@
 
         <activity
             android:name=".ChooseSeatsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ServiceSelectionActivity"
             android:exported="false" />
 
         <activity
@@ -127,6 +135,12 @@
         <activity
             android:name=".AIPlannerActivity"
             android:exported="false" />
+
+        <!-- AI Chat - Chatbot AI -->
+        <activity
+            android:name=".AIChatActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
             <activity android:name=".webview.WebViewPaymentActivity"
                 android:exported="false"

@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.chip.Chip;
 import com.prm.flightbooking.models.FlightInfo;
 
 import java.text.NumberFormat;
@@ -87,23 +88,52 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.FlightView
         // Hiển thị trạng thái chuyến bay với màu sắc phù hợp
         String status = flight.getStatus();
         String statusText = convertStatusToVietnamese(status);
-        holder.tvStatus.setText(statusText);
         
-        // Đặt màu cho status badge
-        int textColor = Color.WHITE;
-        int bgColor;
-        if ("CANCELLED".equalsIgnoreCase(status)) {
-            bgColor = Color.parseColor("#F44336"); // Red
-        } else if ("DELAYED".equalsIgnoreCase(status)) {
-            bgColor = Color.parseColor("#FF9800"); // Orange
-        } else if ("COMPLETED".equalsIgnoreCase(status)) {
-            bgColor = Color.parseColor("#757575"); // Gray
-        } else {
-            // SCHEDULED, PREPARING, DEPARTED
-            bgColor = Color.parseColor("#4CAF50"); // Green
+        // Sử dụng Chip nếu có, nếu không thì dùng TextView (backward compatibility)
+        if (holder.chipStatus != null) {
+            holder.chipStatus.setText(statusText);
+            // Đặt màu cho status chip
+            int chipBgColor;
+            int chipStrokeColor;
+            int chipTextColor;
+            if ("CANCELLED".equalsIgnoreCase(status)) {
+                chipBgColor = Color.parseColor("#FFEBEE"); // Light Red
+                chipStrokeColor = Color.parseColor("#F44336"); // Red
+                chipTextColor = Color.parseColor("#F44336");
+            } else if ("DELAYED".equalsIgnoreCase(status)) {
+                chipBgColor = Color.parseColor("#FFF3E0"); // Light Orange
+                chipStrokeColor = Color.parseColor("#FF9800"); // Orange
+                chipTextColor = Color.parseColor("#FF9800");
+            } else if ("COMPLETED".equalsIgnoreCase(status)) {
+                chipBgColor = Color.parseColor("#F5F5F5"); // Light Gray
+                chipStrokeColor = Color.parseColor("#757575"); // Gray
+                chipTextColor = Color.parseColor("#757575");
+            } else {
+                // SCHEDULED, PREPARING, DEPARTED
+                chipBgColor = Color.parseColor("#E8F5E8"); // Light Green
+                chipStrokeColor = Color.parseColor("#4CAF50"); // Green
+                chipTextColor = Color.parseColor("#4CAF50");
+            }
+            holder.chipStatus.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(chipBgColor));
+            holder.chipStatus.setChipStrokeColor(android.content.res.ColorStateList.valueOf(chipStrokeColor));
+            holder.chipStatus.setTextColor(chipTextColor);
+        } else if (holder.tvStatus != null) {
+            // Fallback cho TextView (backward compatibility)
+            holder.tvStatus.setText(statusText);
+            int textColor = Color.WHITE;
+            int bgColor;
+            if ("CANCELLED".equalsIgnoreCase(status)) {
+                bgColor = Color.parseColor("#F44336");
+            } else if ("DELAYED".equalsIgnoreCase(status)) {
+                bgColor = Color.parseColor("#FF9800");
+            } else if ("COMPLETED".equalsIgnoreCase(status)) {
+                bgColor = Color.parseColor("#757575");
+            } else {
+                bgColor = Color.parseColor("#4CAF50");
+            }
+            holder.tvStatus.setTextColor(textColor);
+            holder.tvStatus.setBackgroundColor(bgColor);
         }
-        holder.tvStatus.setTextColor(textColor);
-        holder.tvStatus.setBackgroundColor(bgColor);
 
         // Gán sự kiện click cho item nếu listener không null
         if (listener != null) {
@@ -144,7 +174,9 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.FlightView
 
     // ViewHolder chứa các view trong item_flight
     static class FlightViewHolder extends RecyclerView.ViewHolder {
-        TextView tvFlightNumber, tvAirline, tvDepartureTime, tvArrivalTime, tvDepartureAirport, tvArrivalAirport, tvPrice, tvStatus, tvFlightDate;
+        TextView tvFlightNumber, tvAirline, tvDepartureTime, tvArrivalTime, tvDepartureAirport, tvArrivalAirport, tvPrice, tvFlightDate;
+        Chip chipStatus;
+        TextView tvStatus; // Fallback for backward compatibility
 
         FlightViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -155,7 +187,8 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.FlightView
             tvDepartureAirport = itemView.findViewById(R.id.tv_departure_airport);
             tvArrivalAirport = itemView.findViewById(R.id.tv_arrival_airport);
             tvPrice = itemView.findViewById(R.id.tv_price);
-            tvStatus = itemView.findViewById(R.id.tv_status);
+            chipStatus = itemView.findViewById(R.id.chip_status);
+            tvStatus = itemView.findViewById(R.id.tv_status); // Fallback
             tvFlightDate = itemView.findViewById(R.id.tv_flight_date);
         }
     }

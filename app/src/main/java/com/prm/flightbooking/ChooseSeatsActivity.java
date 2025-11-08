@@ -347,7 +347,8 @@ public class ChooseSeatsActivity extends AppCompatActivity {
 
         int seatClassId = getSeatClassId(spinnerSeatClass.getSelectedItem().toString());
         BigDecimal selectedSeatClassPrice = basePrice.multiply(seatClasses.get(spinnerSeatClass.getSelectedItemPosition()).getPriceMultiplier());
-        Intent intent = new Intent(this, BookingFormActivity.class);
+        // Navigate to ServiceSelectionActivity instead of directly to BookingFormActivity
+        Intent intent = new Intent(this, ServiceSelectionActivity.class);
         intent.putExtra("flightId", flightId);
         intent.putExtra("seatClassId", seatClassId);
         intent.putExtra("passengerCount", passengerCount);

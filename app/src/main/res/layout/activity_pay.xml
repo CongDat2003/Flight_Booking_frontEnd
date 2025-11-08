@@ -330,7 +330,7 @@
                                     android:id="@+id/text_view_price_label"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Giá"
+                                    android:text="Tổng giá"
                                     android:textColor="#888888"
                                     android:textSize="14sp" />
 
@@ -343,6 +343,108 @@
                                     android:textSize="18sp"
                                     android:textStyle="bold" />
                             </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Price Breakdown -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#E0E0E0"
+                        android:layout_marginVertical="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Chi tiết giá"
+                            android:textColor="#888888"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="8dp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="4dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Giá vé:"
+                                android:textColor="#666666"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:id="@+id/text_view_flight_price"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 VND"
+                                android:textColor="#1A1A1A"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="4dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Dịch vụ:"
+                                android:textColor="#666666"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:id="@+id/text_view_services_price"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 VND"
+                                android:textColor="#1A1A1A"
+                                android:textSize="14sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#E0E0E0"
+                            android:layout_marginVertical="8dp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Tổng cộng:"
+                                android:textColor="#1A1A1A"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/text_view_total_price"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0 VND"
+                                android:textColor="#0077D7"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -385,43 +487,43 @@
                 android:orientation="vertical"
                 android:layout_marginTop="16dp">
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_download_ticket"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:text="Tải Vé"
-                    android:textColor="#FFFFFF"
+                    android:textAllCaps="false"
+                    android:textColor="?attr/colorOnPrimary"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:backgroundTint="#0077D7"
-                    android:layout_marginBottom="12dp"
-                    app:cardCornerRadius="8dp"
-                    app:cardElevation="4dp" />
+                    app:cornerRadius="12dp"
+                    app:backgroundTint="?attr/colorPrimary"
+                    android:layout_marginBottom="12dp" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_pay_later"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:text="Về Trang Chủ (Thanh Toán Sau)"
-                    android:textColor="#444444"
+                    android:textAllCaps="false"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:backgroundTint="#E0E0E0"
-                    android:layout_marginBottom="12dp"
-                    app:cardCornerRadius="8dp"
-                    app:cardElevation="4dp" />
+                    app:cornerRadius="12dp"
+                    app:backgroundTint="?attr/colorSurfaceVariant"
+                    android:layout_marginBottom="12dp" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_pay_now"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:text="Thanh Toán Ngay"
-                    android:textColor="#FFFFFF"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/white"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:backgroundTint="#4CAF50"
-                    app:cardCornerRadius="8dp"
-                    app:cardElevation="4dp" />
+                    app:cornerRadius="12dp"
+                    app:backgroundTint="@color/success_green" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

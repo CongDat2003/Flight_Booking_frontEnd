@@ -352,6 +352,39 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- Services Information -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginBottom="20dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🎁 Dịch vụ đã chọn"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#1A1A1A"
+                        android:layout_marginBottom="16dp"/>
+
+                    <LinearLayout
+                        android:id="@+id/services_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"/>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
             <!-- Booking Summary -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"

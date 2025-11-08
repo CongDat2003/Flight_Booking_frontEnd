@@ -609,20 +609,36 @@
                         android:orientation="vertical"
                         android:padding="20dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <!-- Header với icon sách -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="16dp"
-                            android:text="📚 Lịch sử du lịch"
-                            android:textColor="#1A1A1A"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_marginEnd="12dp"
+                                android:src="@drawable/ic_history_books"
+                                app:tint="#FF6F00" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Lịch sử du lịch"
+                                android:textColor="#1A1A1A"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
 
                         <!-- My Bookings -->
                         <LinearLayout
                             android:id="@+id/menu_my_bookings"
                             android:layout_width="match_parent"
-                            android:layout_height="50dp"
+                            android:layout_height="wrap_content"
                             android:layout_marginBottom="8dp"
                             android:background="@drawable/menu_item_ripple"
                             android:clickable="true"
@@ -635,15 +651,33 @@
                                 android:layout_width="24dp"
                                 android:layout_height="24dp"
                                 android:layout_marginEnd="16dp"
-                                android:src="@drawable/ic_flight_ticket" />
+                                android:src="@drawable/ic_flight_ticket"
+                                app:tint="#FF6F00" />
 
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="My Bookings"
-                                android:textColor="#1A1A1A"
-                                android:textSize="14sp" />
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="My Bookings"
+                                    android:textColor="#1A1A1A"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold" />
+
+                                <!-- Preview recent bookings -->
+                                <TextView
+                                    android:id="@+id/tv_recent_bookings_preview"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:text="3 đặt vé gần đây"
+                                    android:textColor="#666666"
+                                    android:textSize="12sp" />
+                            </LinearLayout>
 
                             <TextView
                                 android:layout_width="wrap_content"

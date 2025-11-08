@@ -39,7 +39,9 @@ import com.prm.flightbooking.dto.booking.PassengerSeatDto;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import retrofit2.Call;
@@ -52,17 +54,19 @@ public class BookingDetailActivity extends AppCompatActivity {
     private TextView tvBookingReference, tvStatus, tvPaymentStatus, tvPrice, tvBookingDate;
     private TextView tvFlightNumber, tvAirline, tvAircraftModel, tvDepartureAirport, tvArrivalAirport;
     private TextView tvDepartureTime, tvArrivalTime, tvGate, tvNotes;
-    private LinearLayout passengerContainer, seatSummaryContainer;
+    private LinearLayout passengerContainer, seatSummaryContainer, servicesContainer;
     private ProgressBar progressBar;
     private Button btnCancelBooking;
     private ImageButton btnBack, btnDownload;
 
     // API service và dữ liệu
     private BookingApiEndpoint bookingApi;
+    private com.prm.flightbooking.api.ServiceApiEndpoint serviceApi;
     private SharedPreferences sharedPreferences;
     private int userId;
     private int bookingId;
     private BookingDetailDto currentBookingDetail; // Lưu booking detail để export
+    private List<com.prm.flightbooking.dto.service.BookingServiceDto> currentServices; // Lưu danh sách dịch vụ để export
     
     // Permission constants
     private static final int PERMISSION_REQUEST_CODE = 1001;
@@ -78,6 +82,7 @@ public class BookingDetailActivity extends AppCompatActivity {
 
         // Khởi tạo API service và SharedPreferences
         bookingApi = ApiServiceProvider.getBookingApi();
+        serviceApi = ApiServiceProvider.getServiceApi();
         sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE);
 
         // Kiểm tra trạng thái đăng nhập
@@ -118,6 +123,7 @@ public class BookingDetailActivity extends AppCompatActivity {
         tvNotes = findViewById(R.id.tv_notes);
         passengerContainer = findViewById(R.id.passenger_container);
         seatSummaryContainer = findViewById(R.id.seat_summary_container);
+        servicesContainer = findViewById(R.id.services_container);
         progressBar = findViewById(R.id.progress_bar);
         btnCancelBooking = findViewById(R.id.btn_cancel_booking);
         btnDownload = findViewById(R.id.btn_download);
@@ -269,6 +275,75 @@ public class BookingDetailActivity extends AppCompatActivity {
                 }
             }
             
+            // Thông tin dịch vụ đã chọn
+            rowNum++; // Dòng trống
+            Row servicesHeader = sheet.createRow(rowNum++);
+            servicesHeader.createCell(0).setCellValue("DỊCH VỤ ĐÃ CHỌN");
+            
+            if (currentServices != null && !currentServices.isEmpty()) {
+                // Header row cho bảng dịch vụ
+                Row servicesTableHeader = sheet.createRow(rowNum++);
+                servicesTableHeader.createCell(0).setCellValue("Loại dịch vụ");
+                servicesTableHeader.createCell(1).setCellValue("Tên dịch vụ");
+                servicesTableHeader.createCell(2).setCellValue("Số lượng");
+                servicesTableHeader.createCell(3).setCellValue("Đơn giá");
+                servicesTableHeader.createCell(4).setCellValue("Tổng tiền");
+                
+                // Dữ liệu dịch vụ
+                for (com.prm.flightbooking.dto.service.BookingServiceDto service : currentServices) {
+                    Row serviceRow = sheet.createRow(rowNum++);
+                    
+                    // Loại dịch vụ
+                    String serviceType = service.getServiceType();
+                    String serviceTypeName = "";
+                    if ("MEAL".equalsIgnoreCase(serviceType)) {
+                        serviceTypeName = "Bữa ăn & Đồ uống";
+                    } else if ("LUGGAGE".equalsIgnoreCase(serviceType)) {
+                        serviceTypeName = "Hành lý";
+                    } else if ("INSURANCE".equalsIgnoreCase(serviceType)) {
+                        serviceTypeName = "Bảo hiểm";
+                    } else {
+                        serviceTypeName = serviceType;
+                    }
+                    serviceRow.createCell(0).setCellValue(serviceTypeName);
+                    
+                    // Tên dịch vụ
+                    String serviceName = "";
+                    if (service.getMeal() != null) {
+                        serviceName = service.getMeal().getMealName();
+                    } else if (service.getLuggage() != null) {
+                        serviceName = service.getLuggage().getLuggageName();
+                    } else if (service.getInsurance() != null) {
+                        serviceName = service.getInsurance().getInsuranceName();
+                    }
+                    serviceRow.createCell(1).setCellValue(serviceName);
+                    
+                    // Số lượng
+                    serviceRow.createCell(2).setCellValue(service.getQuantity());
+                    
+                    // Đơn giá
+                    BigDecimal unitPrice = service.getPrice();
+                    if (unitPrice != null && unitPrice.compareTo(BigDecimal.ZERO) > 0) {
+                        serviceRow.createCell(3).setCellValue(currencyFormat.format(unitPrice) + " VND");
+                    } else {
+                        serviceRow.createCell(3).setCellValue("Miễn phí");
+                    }
+                    
+                    // Tổng tiền
+                    BigDecimal totalPrice = unitPrice != null && unitPrice.compareTo(BigDecimal.ZERO) > 0 
+                        ? unitPrice.multiply(new BigDecimal(service.getQuantity()))
+                        : BigDecimal.ZERO;
+                    if (totalPrice.compareTo(BigDecimal.ZERO) > 0) {
+                        serviceRow.createCell(4).setCellValue(currencyFormat.format(totalPrice) + " VND");
+                    } else {
+                        serviceRow.createCell(4).setCellValue("Miễn phí");
+                    }
+                }
+            } else {
+                Row noServicesRow = sheet.createRow(rowNum++);
+                noServicesRow.createCell(0).setCellValue("Không có dịch vụ nào được chọn");
+            }
+            
             // Ghi chú
             if (currentBookingDetail.getNotes() != null && !currentBookingDetail.getNotes().isEmpty()) {
                 rowNum++; // Dòng trống
@@ -385,6 +460,9 @@ public class BookingDetailActivity extends AppCompatActivity {
         // Hiển thị tóm tắt ghế
         displaySeatSummary(bookingDetail);
 
+        // Hiển thị dịch vụ đã chọn
+        fetchAndDisplayServices(bookingId);
+
         // Hiển thị nút hủy vé nếu có thể hủy
         updateCancelButton(bookingDetail.getBookingStatus());
     }
@@ -395,7 +473,7 @@ public class BookingDetailActivity extends AppCompatActivity {
         tvStatus.setText(formatBookingStatus(bookingDetail.getBookingStatus()));
         tvPaymentStatus.setText(formatPaymentStatus(bookingDetail.getPaymentStatus()));
 
-        // Hiển thị giá tiền
+        // Hiển thị giá tiền - totalAmount từ API đã bao gồm dịch vụ
         BigDecimal totalAmount = bookingDetail.getTotalAmount();
         if (totalAmount != null) {
             tvPrice.setText(currencyFormat.format(totalAmount) + " VNĐ");
@@ -607,6 +685,194 @@ public class BookingDetailActivity extends AppCompatActivity {
             return "Ghế lối đi";
         } else {
             return "Ghế giữa";
+        }
+    }
+
+    // Lấy và hiển thị dịch vụ đã chọn
+    private void fetchAndDisplayServices(int bookingId) {
+        if (serviceApi == null) return;
+        
+        Call<List<com.prm.flightbooking.dto.service.BookingServiceDto>> call = serviceApi.getBookingServices(bookingId);
+        call.enqueue(new Callback<List<com.prm.flightbooking.dto.service.BookingServiceDto>>() {
+            @Override
+            public void onResponse(Call<List<com.prm.flightbooking.dto.service.BookingServiceDto>> call, 
+                                 Response<List<com.prm.flightbooking.dto.service.BookingServiceDto>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    currentServices = response.body(); // Lưu danh sách dịch vụ để export
+                    displayServices(response.body());
+                } else {
+                    currentServices = new ArrayList<>(); // Không có dịch vụ
+                    // Không có dịch vụ hoặc lỗi
+                    servicesContainer.removeAllViews();
+                    TextView noServices = new TextView(BookingDetailActivity.this);
+                    noServices.setText("Không có dịch vụ nào được chọn");
+                    noServices.setTextColor(getResources().getColor(android.R.color.darker_gray));
+                    noServices.setTextSize(14f);
+                    noServices.setPadding(0, 16, 0, 16);
+                    servicesContainer.addView(noServices);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<com.prm.flightbooking.dto.service.BookingServiceDto>> call, Throwable t) {
+                Log.e("BookingDetailActivity", "Error loading services: " + t.getMessage());
+                currentServices = new ArrayList<>(); // Không có dịch vụ nếu lỗi
+            }
+        });
+    }
+
+    // Hiển thị danh sách dịch vụ với thông tin đầy đủ
+    private void displayServices(List<com.prm.flightbooking.dto.service.BookingServiceDto> services) {
+        servicesContainer.removeAllViews();
+        
+        // Lưu danh sách dịch vụ để export
+        currentServices = services != null ? new ArrayList<>(services) : new ArrayList<>();
+        
+        if (services == null || services.isEmpty()) {
+            TextView noServices = new TextView(this);
+            noServices.setText("Không có dịch vụ nào được chọn");
+            noServices.setTextColor(getResources().getColor(android.R.color.darker_gray));
+            noServices.setTextSize(14f);
+            noServices.setPadding(0, 16, 0, 16);
+            servicesContainer.addView(noServices);
+            return;
+        }
+
+        // Phân loại dịch vụ
+        List<com.prm.flightbooking.dto.service.BookingServiceDto> meals = new ArrayList<>();
+        List<com.prm.flightbooking.dto.service.BookingServiceDto> luggages = new ArrayList<>();
+        List<com.prm.flightbooking.dto.service.BookingServiceDto> insurances = new ArrayList<>();
+
+        for (com.prm.flightbooking.dto.service.BookingServiceDto service : services) {
+            if ("MEAL".equalsIgnoreCase(service.getServiceType())) {
+                meals.add(service);
+            } else if ("LUGGAGE".equalsIgnoreCase(service.getServiceType())) {
+                luggages.add(service);
+            } else if ("INSURANCE".equalsIgnoreCase(service.getServiceType())) {
+                insurances.add(service);
+            }
+        }
+
+        // Hiển thị đồ ăn/đồ uống
+        if (!meals.isEmpty()) {
+            TextView mealsHeader = new TextView(this);
+            mealsHeader.setText("🍽️ Bữa ăn & Đồ uống:");
+            mealsHeader.setTextSize(15f);
+            mealsHeader.setTypeface(null, android.graphics.Typeface.BOLD);
+            mealsHeader.setTextColor(getResources().getColor(android.R.color.black));
+            mealsHeader.setPadding(0, 8, 0, 8);
+            servicesContainer.addView(mealsHeader);
+
+            for (com.prm.flightbooking.dto.service.BookingServiceDto service : meals) {
+                if (service.getMeal() != null) {
+                    TextView mealItem = new TextView(this);
+                    StringBuilder mealInfo = new StringBuilder();
+                    mealInfo.append("  • ").append(service.getMeal().getMealName());
+                    // Hiển thị loại (đồ ăn/đồ uống) nếu có
+                    if (service.getMeal().getMealType() != null && !service.getMeal().getMealType().isEmpty()) {
+                        mealInfo.append(" - ").append(service.getMeal().getMealType());
+                    }
+                    // Hiển thị số lượng và giá
+                    mealInfo.append(" (Số lượng: ").append(service.getQuantity()).append(")");
+                    // Kiểm tra nếu dịch vụ free (giá = 0)
+                    if (service.getPrice() != null && service.getPrice().compareTo(BigDecimal.ZERO) == 0) {
+                        mealInfo.append(" - Miễn phí");
+                    } else {
+                    BigDecimal totalPrice = service.getPrice().multiply(new BigDecimal(service.getQuantity()));
+                    mealInfo.append(" - ").append(currencyFormat.format(totalPrice)).append(" VND");
+                    }
+                    mealItem.setText(mealInfo.toString());
+                    mealItem.setTextSize(13f);
+                    mealItem.setTextColor(getResources().getColor(android.R.color.black));
+                    mealItem.setPadding(16, 4, 0, 4);
+                    servicesContainer.addView(mealItem);
+                }
+            }
+        }
+
+        // Hiển thị hành lý
+        if (!luggages.isEmpty()) {
+            TextView luggageHeader = new TextView(this);
+            luggageHeader.setText("🧳 Hành lý:");
+            luggageHeader.setTextSize(15f);
+            luggageHeader.setTypeface(null, android.graphics.Typeface.BOLD);
+            luggageHeader.setTextColor(getResources().getColor(android.R.color.black));
+            luggageHeader.setPadding(0, 12, 0, 8);
+            servicesContainer.addView(luggageHeader);
+
+            for (com.prm.flightbooking.dto.service.BookingServiceDto service : luggages) {
+                if (service.getLuggage() != null) {
+                    TextView luggageItem = new TextView(this);
+                    StringBuilder luggageInfo = new StringBuilder();
+                    luggageInfo.append("  • ").append(service.getLuggage().getLuggageName());
+                    // Hiển thị trọng lượng
+                    if (service.getLuggage().getWeightLimit() != null) {
+                        luggageInfo.append(" - ").append(service.getLuggage().getWeightLimit()).append(" kg");
+                    }
+                    // Hiển thị loại hành lý
+                    if (service.getLuggage().getLuggageType() != null && !service.getLuggage().getLuggageType().isEmpty()) {
+                        luggageInfo.append(" (").append(service.getLuggage().getLuggageType()).append(")");
+                    }
+                    // Hiển thị số lượng và giá
+                    luggageInfo.append(" (Số lượng: ").append(service.getQuantity()).append(")");
+                    // Kiểm tra nếu dịch vụ free (giá = 0)
+                    if (service.getPrice() != null && service.getPrice().compareTo(BigDecimal.ZERO) == 0) {
+                        luggageInfo.append(" - Miễn phí");
+                    } else {
+                    BigDecimal totalPrice = service.getPrice().multiply(new BigDecimal(service.getQuantity()));
+                    luggageInfo.append(" - ").append(currencyFormat.format(totalPrice)).append(" VND");
+                    }
+                    luggageItem.setText(luggageInfo.toString());
+                    luggageItem.setTextSize(13f);
+                    luggageItem.setTextColor(getResources().getColor(android.R.color.black));
+                    luggageItem.setPadding(16, 4, 0, 4);
+                    servicesContainer.addView(luggageItem);
+                }
+            }
+        }
+
+        // Hiển thị bảo hiểm
+        if (!insurances.isEmpty()) {
+            TextView insuranceHeader = new TextView(this);
+            insuranceHeader.setText("🛡️ Bảo hiểm:");
+            insuranceHeader.setTextSize(15f);
+            insuranceHeader.setTypeface(null, android.graphics.Typeface.BOLD);
+            insuranceHeader.setTextColor(getResources().getColor(android.R.color.black));
+            insuranceHeader.setPadding(0, 12, 0, 8);
+            servicesContainer.addView(insuranceHeader);
+
+            for (com.prm.flightbooking.dto.service.BookingServiceDto service : insurances) {
+                if (service.getInsurance() != null) {
+                    TextView insuranceItem = new TextView(this);
+                    StringBuilder insuranceInfo = new StringBuilder();
+                    insuranceInfo.append("  • ").append(service.getInsurance().getInsuranceName());
+                    // Hiển thị loại bảo hiểm
+                    if (service.getInsurance().getInsuranceType() != null && !service.getInsurance().getInsuranceType().isEmpty()) {
+                        String typeName = "";
+                        switch (service.getInsurance().getInsuranceType().toUpperCase()) {
+                            case "BASIC": typeName = "Hạng Cơ Bản"; break;
+                            case "PREMIUM": typeName = "Hạng Trung"; break;
+                            case "VIP": typeName = "Hạng VIP"; break;
+                            default: typeName = service.getInsurance().getInsuranceType();
+                        }
+                        insuranceInfo.append(" (").append(typeName).append(")");
+                    }
+                    // Hiển thị số lượng và giá
+                    insuranceInfo.append(" (Số lượng: ").append(service.getQuantity()).append(")");
+                    // Kiểm tra nếu dịch vụ free (giá = 0)
+                    if (service.getPrice() != null && service.getPrice().compareTo(BigDecimal.ZERO) == 0) {
+                        insuranceInfo.append(" - Miễn phí");
+                    } else {
+                    BigDecimal totalPrice = service.getPrice().multiply(new BigDecimal(service.getQuantity()));
+                    insuranceInfo.append(" - ").append(currencyFormat.format(totalPrice)).append(" VND");
+                    }
+                    insuranceItem.setText(insuranceInfo.toString());
+                    insuranceItem.setTextSize(13f);
+                    insuranceItem.setTextColor(getResources().getColor(android.R.color.black));
+                    insuranceItem.setPadding(16, 4, 0, 4);
+                    servicesContainer.addView(insuranceItem);
+                }
+            }
         }
     }
 

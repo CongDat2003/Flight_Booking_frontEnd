@@ -1,206 +1,290 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView
+<com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="16dp"
     android:layout_marginEnd="16dp"
-    android:layout_marginTop="8dp"
-    android:layout_marginBottom="8dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="2dp"
+    android:layout_marginTop="12dp"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="4dp"
     app:cardUseCompatPadding="true"
-    app:cardBackgroundColor="#FFFFFF">
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:strokeWidth="0dp"
+    app:rippleColor="?attr/colorPrimary">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="20dp">
 
-        <!-- Flight Date Header -->
+        <!-- Date Header -->
         <TextView
             android:id="@+id/tv_flight_date"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="15 Tháng 7, 2025"
-            android:textSize="14sp"
+            android:text="24 Tháng 11, 2025"
+            android:textSize="13sp"
             android:textStyle="bold"
-            android:textColor="#666666"
-            android:layout_marginBottom="12dp"
-            android:gravity="center" />
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:background="@drawable/date_badge_bg"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Flight Info Header -->
+        <!-- Flight Number and Status Row -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/ll_flight_header"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="12dp"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:layout_marginTop="16dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_flight_date"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_flight"
+                android:tint="?attr/colorPrimary"
+                android:layout_marginEnd="8dp" />
 
             <TextView
                 android:id="@+id/tv_flight_number"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="VN101"
-                android:textSize="20sp"
+                android:text="VU901"
+                android:textSize="22sp"
                 android:textStyle="bold"
-                android:textColor="#1A1A1A" />
+                android:textColor="?attr/colorOnSurface" />
 
-            <TextView
-                android:id="@+id/tv_status"
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_status"
+                style="@style/Widget.Material3.Chip.Assist"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Đã lên lịch"
                 android:textSize="11sp"
                 android:textStyle="bold"
-                android:textColor="#FFFFFF"
-                android:background="#4CAF50"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                android:layout_marginEnd="8dp"
-                android:minWidth="80dp"
-                android:gravity="center" />
-
-            <TextView
-                android:id="@+id/tv_airline"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Vietnam Airlines"
-                android:textSize="13sp"
-                android:textColor="#666666"
-                android:maxLines="1"
-                android:ellipsize="end" />
+                app:chipBackgroundColor="@color/success_light"
+                app:chipStrokeColor="@color/success_green"
+                app:chipStrokeWidth="1dp"
+                android:textColor="@color/success_green"
+                app:chipMinHeight="28dp"
+                android:layout_marginEnd="8dp" />
 
         </LinearLayout>
 
+        <!-- Airline Name -->
+        <TextView
+            android:id="@+id/tv_airline"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Vietravel Airlines"
+            android:textSize="14sp"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:layout_marginTop="6dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintTop_toBottomOf="@id/ll_flight_header"
+            app:layout_constraintStart_toStartOf="@id/ll_flight_header"
+            app:layout_constraintEnd_toEndOf="@id/ll_flight_header" />
+
         <!-- Divider -->
         <View
-            android:layout_width="match_parent"
+            android:id="@+id/divider1"
+            android:layout_width="0dp"
             android:layout_height="1dp"
-            android:background="#E0E0E0"
-            android:layout_marginBottom="12dp" />
+            android:background="?attr/colorOutlineVariant"
+            android:alpha="0.3"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_airline"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <!-- Flight Times and Airports -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/ll_flight_times"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="16dp"
-            android:gravity="center_vertical">
+            app:layout_constraintTop_toBottomOf="@id/divider1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
             <!-- Departure Section -->
             <LinearLayout
+                android:id="@+id/ll_departure"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="start">
+                android:gravity="start"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/ll_arrow"
+                app:layout_constraintBottom_toBottomOf="parent">
 
                 <TextView
                     android:id="@+id/tv_departure_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="06:00"
-                    android:textSize="24sp"
+                    android:text="03:39"
+                    android:textSize="28sp"
                     android:textStyle="bold"
-                    android:textColor="#1A1A1A" />
+                    android:textColor="?attr/colorOnSurface"
+                    android:letterSpacing="0.02" />
 
                 <TextView
                     android:id="@+id/tv_departure_airport"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="HAN"
+                    android:text="PQC"
                     android:textSize="16sp"
-                    android:textColor="#666666"
-                    android:layout_marginTop="4dp" />
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_marginTop="4dp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
-            <!-- Flight Arrow Icon -->
+            <!-- Flight Arrow Icon with Duration -->
             <LinearLayout
+                android:id="@+id/ll_arrow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:layout_marginHorizontal="12dp">
+                android:layout_marginHorizontal="16dp"
+                app:layout_constraintStart_toEndOf="@id/ll_departure"
+                app:layout_constraintEnd_toStartOf="@id/ll_arrival"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <View
+                    android:layout_width="60dp"
+                    android:layout_height="2dp"
+                    android:background="@drawable/dotted_line"
+                    android:layout_marginBottom="4dp" />
 
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@android:drawable/arrow_down_float"
-                    android:tint="#2196F3"
+                    android:src="@drawable/ic_flight"
+                    android:tint="?attr/colorPrimary"
                     android:rotation="90"
-                    android:alpha="0.7" />
+                    android:alpha="0.8" />
+
+                <View
+                    android:layout_width="60dp"
+                    android:layout_height="2dp"
+                    android:background="@drawable/dotted_line"
+                    android:layout_marginTop="4dp" />
 
             </LinearLayout>
 
             <!-- Arrival Section -->
             <LinearLayout
+                android:id="@+id/ll_arrival"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="end">
+                android:gravity="end"
+                app:layout_constraintStart_toEndOf="@id/ll_arrow"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
 
                 <TextView
                     android:id="@+id/tv_arrival_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="08:15"
-                    android:textSize="24sp"
+                    android:text="00:09"
+                    android:textSize="28sp"
                     android:textStyle="bold"
-                    android:textColor="#1A1A1A" />
+                    android:textColor="?attr/colorOnSurface"
+                    android:gravity="end"
+                    android:letterSpacing="0.02" />
 
                 <TextView
                     android:id="@+id/tv_arrival_airport"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="SGN"
+                    android:text="HAN"
                     android:textSize="16sp"
-                    android:textColor="#666666"
-                    android:layout_marginTop="4dp" />
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:layout_marginTop="4dp"
+                    android:textStyle="bold"
+                    android:gravity="end" />
 
             </LinearLayout>
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- Divider -->
         <View
-            android:layout_width="match_parent"
+            android:id="@+id/divider2"
+            android:layout_width="0dp"
             android:layout_height="1dp"
-            android:background="#E0E0E0"
-            android:layout_marginBottom="12dp" />
+            android:background="?attr/colorOutlineVariant"
+            android:alpha="0.3"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="12dp"
+            app:layout_constraintTop_toBottomOf="@id/ll_flight_times"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <!-- Price Section -->
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/ll_price"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            app:layout_constraintTop_toBottomOf="@id/divider2"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_flight_ticket"
+                android:tint="?attr/colorPrimary"
+                android:layout_marginEnd="8dp" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Giá vé:"
-                android:textSize="14sp"
-                android:textColor="#666666" />
+                android:text="Giá vé"
+                android:textSize="15sp"
+                android:textColor="?attr/colorOnSurfaceVariant" />
 
             <TextView
                 android:id="@+id/tv_price"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="2,500,000 VND"
-                android:textSize="20sp"
+                android:text="9,500,000 VND"
+                android:textSize="22sp"
                 android:textStyle="bold"
-                android:textColor="#D81B60" />
+                android:textColor="?attr/colorPrimary"
+                android:background="@drawable/price_badge_bg"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp" />
 
         </LinearLayout>
 
-    </LinearLayout>
-</androidx.cardview.widget.CardView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

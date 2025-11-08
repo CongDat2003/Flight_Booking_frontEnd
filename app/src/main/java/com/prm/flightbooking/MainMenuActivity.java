@@ -2,6 +2,8 @@ package com.prm.flightbooking;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Animatable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -27,7 +29,7 @@ public class MainMenuActivity extends AppCompatActivity {
     private ImageView ivAvatar;
     // Legacy views (may be null in redesigned layout)
     private Button btnBannerBook;
-    private LinearLayout menuBookFlight, menuMyTrips, menuNotifications, menuProfile, menuAIPlan;
+    private LinearLayout menuBookFlight, menuMyTrips, menuNotifications, menuProfile, menuAIPlan, menuAIChat;
     private TextView tvNotificationsBadge;
     private BottomNavigationView bottomNavigation;
 
@@ -54,6 +56,7 @@ public class MainMenuActivity extends AppCompatActivity {
         bindingAction();
         loadUserInfo();
         setupBackPressHandler();
+        startAIChatIconAnimation();
     }
 
     private void bindingView() {
@@ -68,6 +71,7 @@ public class MainMenuActivity extends AppCompatActivity {
         menuProfile = findViewById(R.id.menu_profile);
         tvNotificationsBadge = findViewById(R.id.tv_notifications_badge);
         menuAIPlan = findViewById((R.id.menu_ai_plan));
+        menuAIChat = findViewById(R.id.menu_ai_chat);
 
         bottomNavigation = findViewById(R.id.bottom_navigation);
     }
@@ -80,6 +84,7 @@ public class MainMenuActivity extends AppCompatActivity {
         if (menuProfile != null) menuProfile.setOnClickListener(this::onProfileClick);
         if (ivAvatar != null) ivAvatar.setOnClickListener(this::onAvatarClick);
         if (menuAIPlan != null) menuAIPlan.setOnClickListener(this::OnAITripPlan);
+        if (menuAIChat != null) menuAIChat.setOnClickListener(this::onAIChatClick);
 
         bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
@@ -90,6 +95,29 @@ public class MainMenuActivity extends AppCompatActivity {
 
     private void OnAITripPlan(View view) {
         navigateToActivity(AIPlannerActivity.class);
+    }
+
+    // Xử lý click menu AI Chatbot
+    private void onAIChatClick(View view) {
+        navigateToActivity(AIChatActivity.class);
+    }
+
+    // Start animation cho AI Chatbot icon
+    private void startAIChatIconAnimation() {
+        if (menuAIChat != null) {
+            // ImageView là child đầu tiên của LinearLayout
+            for (int i = 0; i < menuAIChat.getChildCount(); i++) {
+                View child = menuAIChat.getChildAt(i);
+                if (child instanceof ImageView) {
+                    ImageView iconView = (ImageView) child;
+                    Drawable drawable = iconView.getDrawable();
+                    if (drawable instanceof Animatable) {
+                        ((Animatable) drawable).start();
+                    }
+                    break;
+                }
+            }
+        }
     }
 
     private void setupBackPressHandler() {

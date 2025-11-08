@@ -31,6 +31,7 @@ public class Profile extends AppCompatActivity {
     private ImageView ivProfileAvatar;
     private TextView tvUserName, tvUserEmail, tvUsername, tvPhone, tvGender, tvDateOfBirth, tvMemberSince;
     private TextView tvFlightsCount, tvCountriesCount, tvMilesCount;
+    private TextView tvRecentBookingsPreview;
     private LinearLayout menuPersonalInfo, menuTravelPreferences, menuMyBookings, menuTripHistory;
     private LinearLayout menuNotifications, menuLanguage, menuHelp, menuLogout;
     private Switch switchNotifications;
@@ -56,6 +57,7 @@ public class Profile extends AppCompatActivity {
 
         // Lấy và hiển thị hồ sơ người dùng
         fetchUserProfile();
+        loadRecentBookingsPreview();
     }
 
     private void bindingView() {
@@ -72,6 +74,7 @@ public class Profile extends AppCompatActivity {
         tvFlightsCount = findViewById(R.id.tv_flights_count);
         tvCountriesCount = findViewById(R.id.tv_countries_count);
         tvMilesCount = findViewById(R.id.tv_miles_count);
+        tvRecentBookingsPreview = findViewById(R.id.tv_recent_bookings_preview);
         menuPersonalInfo = findViewById(R.id.menu_personal_info);
         menuTravelPreferences = findViewById(R.id.menu_travel_preferences);
         menuMyBookings = findViewById(R.id.menu_my_bookings);
@@ -113,11 +116,11 @@ public class Profile extends AppCompatActivity {
 
     /*Menu click*/
     private void onTravelPreferencesClick(View view) {
-        Toast.makeText(this, "Travel Preferences coming soon", Toast.LENGTH_SHORT).show();
+        navigateToActivity(TravelPreferencesActivity.class);
     }
 
     private void onMyBookingsClick(View view) {
-        Toast.makeText(this, "My Bookings coming soon", Toast.LENGTH_SHORT).show();
+        navigateToActivity(BookingHistoryActivity.class);
     }
 
     private void onTripHistoryClick(View view) {
@@ -319,6 +322,42 @@ public class Profile extends AppCompatActivity {
     private void navigateToActivity(Class<?> targetActivity) {
         Intent intent = new Intent(this, targetActivity);
         startActivity(intent);
+    }
+
+    // Load preview của bookings gần đây
+    private void loadRecentBookingsPreview() {
+        int userId = sharedPreferences.getInt("user_id", -1);
+        if (userId <= 0 || tvRecentBookingsPreview == null) return;
+
+        // Gọi API để lấy số lượng bookings gần đây
+        com.prm.flightbooking.api.BookingApiEndpoint bookingApi = 
+            com.prm.flightbooking.api.ApiServiceProvider.getBookingApi();
+        
+        retrofit2.Call<java.util.List<com.prm.flightbooking.dto.booking.UserBookingHistoryDto>> call = 
+            bookingApi.getBookingHistory(userId, 1, 3);
+        
+        call.enqueue(new retrofit2.Callback<java.util.List<com.prm.flightbooking.dto.booking.UserBookingHistoryDto>>() {
+            @Override
+            public void onResponse(retrofit2.Call<java.util.List<com.prm.flightbooking.dto.booking.UserBookingHistoryDto>> call,
+                                 retrofit2.Response<java.util.List<com.prm.flightbooking.dto.booking.UserBookingHistoryDto>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    int count = response.body().size();
+                    if (tvRecentBookingsPreview != null) {
+                        if (count > 0) {
+                            tvRecentBookingsPreview.setText(count + " đặt vé gần đây");
+                        } else {
+                            tvRecentBookingsPreview.setText("Chưa có đặt vé");
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<java.util.List<com.prm.flightbooking.dto.booking.UserBookingHistoryDto>> call,
+                               Throwable t) {
+                // Silent fail - không hiển thị lỗi
+            }
+        });
     }
 
     @Override

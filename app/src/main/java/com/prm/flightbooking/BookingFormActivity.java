@@ -28,6 +28,8 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.prm.flightbooking.api.ApiServiceProvider;
 import com.prm.flightbooking.api.BookingApiEndpoint;
 import com.prm.flightbooking.api.PaymentApiEndpoint;
+import com.prm.flightbooking.api.ServiceApiEndpoint;
+import com.prm.flightbooking.dto.service.AddServiceToBookingDto;
 import com.prm.flightbooking.dto.booking.BookingResponseDto;
 import com.prm.flightbooking.dto.booking.CreateBookingDto;
 import com.prm.flightbooking.dto.booking.PassengerInfoDto;
@@ -54,10 +56,13 @@ public class BookingFormActivity extends AppCompatActivity {
     private ImageButton btnBack;
     private BookingApiEndpoint bookingApi;
     private PaymentApiEndpoint paymentApi;
+    private ServiceApiEndpoint serviceApi;
     private SharedPreferences sharedPreferences;
     private int flightId, userId, seatClassId, passengerCount;
     private List<PassengerInfoDto> passengerDetails;
     private BigDecimal seatClassPrice;
+    private BigDecimal totalServicesPrice = BigDecimal.ZERO;
+    private int[] selectedMeals, selectedLuggages, selectedInsurances;
     private int notificationId = 1000;
     private static final int STORAGE_PERMISSION_CODE = 100;
     private static final int REQ_VNPAY = 1001;
@@ -70,6 +75,7 @@ public class BookingFormActivity extends AppCompatActivity {
 
         bookingApi = ApiServiceProvider.getBookingApi();
         paymentApi = ApiServiceProvider.getPaymentApi();
+        serviceApi = ApiServiceProvider.getServiceApi();
         sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE);
 
         // Retrieve seatClassPrice from Intent
@@ -78,6 +84,18 @@ public class BookingFormActivity extends AppCompatActivity {
         } catch (Exception e) {
             seatClassPrice = null;
             Log.e(TAG, "Error retrieving seatClassPrice: " + e.getMessage());
+        }
+        
+        // Retrieve services data from Intent
+        try {
+            totalServicesPrice = (BigDecimal) getIntent().getSerializableExtra("totalServicesPrice");
+            if (totalServicesPrice == null) totalServicesPrice = BigDecimal.ZERO;
+            selectedMeals = getIntent().getIntArrayExtra("selectedMeals");
+            selectedLuggages = getIntent().getIntArrayExtra("selectedLuggages");
+            selectedInsurances = getIntent().getIntArrayExtra("selectedInsurances");
+        } catch (Exception e) {
+            totalServicesPrice = BigDecimal.ZERO;
+            Log.e(TAG, "Error retrieving services data: " + e.getMessage());
         }
 
         requestStoragePermission();
@@ -179,6 +197,22 @@ public class BookingFormActivity extends AppCompatActivity {
                 summary.append("-----------------------------------------------------\n");
             }
         }
+        
+        // Add services summary
+        if (totalServicesPrice.compareTo(BigDecimal.ZERO) > 0) {
+            summary.append("\n-----------------------------------------------------\n");
+            summary.append("Dịch vụ đã chọn:\n");
+            if (selectedMeals != null && selectedMeals.length > 0) {
+                summary.append("   - Bữa ăn: ").append(selectedMeals.length / 2).append(" món\n");
+            }
+            if (selectedLuggages != null && selectedLuggages.length > 0) {
+                summary.append("   - Hành lý: ").append(selectedLuggages.length / 2).append(" loại\n");
+            }
+            if (selectedInsurances != null && selectedInsurances.length > 0) {
+                summary.append("   - Bảo hiểm: ").append(selectedInsurances.length / 2).append(" gói\n");
+            }
+            summary.append("   - Tổng dịch vụ: ").append(formatCurrency(totalServicesPrice)).append("\n");
+        }
 
         tvBookingSummary.setText(summary.toString());
 
@@ -186,9 +220,15 @@ public class BookingFormActivity extends AppCompatActivity {
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
         tvTotalPrice.setText(currencyFormat.format(totalPrice));
     }
+    
+    private String formatCurrency(BigDecimal amount) {
+        NumberFormat currencyFormat = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+        return currencyFormat.format(amount) + " VND";
+    }
 
     private BigDecimal calculateTotalPrice() {
-        return seatClassPrice.multiply(new BigDecimal(passengerCount));
+        BigDecimal seatTotal = seatClassPrice.multiply(new BigDecimal(passengerCount));
+        return seatTotal.add(totalServicesPrice);
     }
 
     private String getSeatClassName(int seatClassId) {
@@ -303,6 +343,9 @@ public class BookingFormActivity extends AppCompatActivity {
         Toast.makeText(this, successMessage, Toast.LENGTH_LONG).show();
         sendBookingSuccessNotification(bookingReference, bookingId);
         
+        // Add services to booking
+        addServicesToBooking(bookingId);
+        
         // Navigate to PayActivity để thanh toán sau (dùng cho QR Code hoặc thanh toán lại)
         navigateToPayment(bookingId);
     }
@@ -315,8 +358,85 @@ public class BookingFormActivity extends AppCompatActivity {
         Toast.makeText(this, successMessage, Toast.LENGTH_SHORT).show();
         sendBookingSuccessNotification(bookingReference, bookingId);
         
+        // Add services to booking
+        addServicesToBooking(bookingId);
+        
         // Tạo payment và mở WebView thanh toán ngay
         createPaymentAndOpenWebView(bookingId, paymentMethod);
+    }
+    
+    private void addServicesToBooking(int bookingId) {
+        // Add meals
+        if (selectedMeals != null && selectedMeals.length > 0) {
+            for (int i = 0; i < selectedMeals.length; i += 2) {
+                int mealId = selectedMeals[i];
+                int quantity = selectedMeals[i + 1];
+                AddServiceToBookingDto dto = new AddServiceToBookingDto();
+                dto.setBookingId(bookingId);
+                dto.setServiceType("MEAL");
+                dto.setMealId(mealId);
+                dto.setQuantity(quantity);
+                serviceApi.addServiceToBooking(dto).enqueue(new Callback<com.prm.flightbooking.dto.service.BookingServiceDto>() {
+                    @Override
+                    public void onResponse(Call<com.prm.flightbooking.dto.service.BookingServiceDto> call, Response<com.prm.flightbooking.dto.service.BookingServiceDto> response) {
+                        // Service added successfully
+                    }
+
+                    @Override
+                    public void onFailure(Call<com.prm.flightbooking.dto.service.BookingServiceDto> call, Throwable t) {
+                        Log.e(TAG, "Error adding meal service: " + t.getMessage());
+                    }
+                });
+            }
+        }
+        
+        // Add luggages
+        if (selectedLuggages != null && selectedLuggages.length > 0) {
+            for (int i = 0; i < selectedLuggages.length; i += 2) {
+                int luggageId = selectedLuggages[i];
+                int quantity = selectedLuggages[i + 1];
+                AddServiceToBookingDto dto = new AddServiceToBookingDto();
+                dto.setBookingId(bookingId);
+                dto.setServiceType("LUGGAGE");
+                dto.setLuggageId(luggageId);
+                dto.setQuantity(quantity);
+                serviceApi.addServiceToBooking(dto).enqueue(new Callback<com.prm.flightbooking.dto.service.BookingServiceDto>() {
+                    @Override
+                    public void onResponse(Call<com.prm.flightbooking.dto.service.BookingServiceDto> call, Response<com.prm.flightbooking.dto.service.BookingServiceDto> response) {
+                        // Service added successfully
+                    }
+
+                    @Override
+                    public void onFailure(Call<com.prm.flightbooking.dto.service.BookingServiceDto> call, Throwable t) {
+                        Log.e(TAG, "Error adding luggage service: " + t.getMessage());
+                    }
+                });
+            }
+        }
+        
+        // Add insurances
+        if (selectedInsurances != null && selectedInsurances.length > 0) {
+            for (int i = 0; i < selectedInsurances.length; i += 2) {
+                int insuranceId = selectedInsurances[i];
+                int quantity = selectedInsurances[i + 1];
+                AddServiceToBookingDto dto = new AddServiceToBookingDto();
+                dto.setBookingId(bookingId);
+                dto.setServiceType("INSURANCE");
+                dto.setInsuranceId(insuranceId);
+                dto.setQuantity(quantity);
+                serviceApi.addServiceToBooking(dto).enqueue(new Callback<com.prm.flightbooking.dto.service.BookingServiceDto>() {
+                    @Override
+                    public void onResponse(Call<com.prm.flightbooking.dto.service.BookingServiceDto> call, Response<com.prm.flightbooking.dto.service.BookingServiceDto> response) {
+                        // Service added successfully
+                    }
+
+                    @Override
+                    public void onFailure(Call<com.prm.flightbooking.dto.service.BookingServiceDto> call, Throwable t) {
+                        Log.e(TAG, "Error adding insurance service: " + t.getMessage());
+                    }
+                });
+            }
+        }
     }
 
     private void handleErrorResponse(Response<BookingResponseDto> response) {

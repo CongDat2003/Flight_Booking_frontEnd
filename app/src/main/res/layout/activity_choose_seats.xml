@@ -233,15 +233,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_confirm_seats"
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:text="Tiếp Tục"
-            android:textColor="#FFFFFF"
+            android:textAllCaps="false"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:background="@drawable/btn_confirm_blue"
+            app:cornerRadius="16dp"
+            app:backgroundTint="?attr/colorPrimary"
             android:elevation="2dp" />
 
     </LinearLayout>

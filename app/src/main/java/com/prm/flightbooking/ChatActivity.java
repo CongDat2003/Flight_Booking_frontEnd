@@ -1,6 +1,10 @@
 package com.prm.flightbooking;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -14,7 +18,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -36,7 +42,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private RecyclerView rvMessages;
     private EditText etMessageInput;
-    private ImageButton btnSend, btnBack;
+    private ImageButton btnSend, btnBack, btnRefresh;
     private ProgressBar progressBar;
     private TextView tvChatTitle;
 
@@ -48,6 +54,10 @@ public class ChatActivity extends AppCompatActivity {
     private Handler refreshHandler;
     private Runnable refreshRunnable;
     private static final long REFRESH_INTERVAL = 3000; // Refresh every 3 seconds
+    private int lastMessageCount = 0; // Track last message count to detect new messages
+    private static final String CHANNEL_ID = "chat_notifications";
+    private static final int NOTIFICATION_ID = 2000;
+    private boolean isActivityVisible = false; // Track if activity is visible
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +78,7 @@ public class ChatActivity extends AppCompatActivity {
         bindingView();
         bindingAction();
         setupRecyclerView();
+        createNotificationChannel();
         loadConversation();
 
         // Setup auto-refresh
@@ -79,20 +90,37 @@ public class ChatActivity extends AppCompatActivity {
         etMessageInput = findViewById(R.id.et_message_input);
         btnSend = findViewById(R.id.btn_send);
         btnBack = findViewById(R.id.btn_back);
+        btnRefresh = findViewById(R.id.btn_refresh);
         progressBar = findViewById(R.id.progress_bar);
         tvChatTitle = findViewById(R.id.tv_chat_title);
     }
 
     private void bindingAction() {
         btnBack.setOnClickListener(v -> finish());
-
         btnSend.setOnClickListener(v -> sendMessage());
+        if (btnRefresh != null) {
+            btnRefresh.setOnClickListener(v -> clearChat());
+        }
 
         // Gửi tin nhắn khi nhấn Enter
         etMessageInput.setOnEditorActionListener((v, actionId, event) -> {
             sendMessage();
             return true;
         });
+    }
+
+    private void clearChat() {
+        new android.app.AlertDialog.Builder(this)
+            .setTitle("Làm mới cuộc chat")
+            .setMessage("Bạn có chắc chắn muốn xóa toàn bộ lịch sử chat?")
+            .setPositiveButton("Xóa", (dialog, which) -> {
+                // Clear local messages
+                adapter.updateData(new ArrayList<>());
+                lastMessageCount = 0;
+                Toast.makeText(ChatActivity.this, "Đã xóa lịch sử chat", Toast.LENGTH_SHORT).show();
+            })
+            .setNegativeButton("Hủy", null)
+            .show();
     }
 
     private void setupRecyclerView() {
@@ -171,6 +199,7 @@ public class ChatActivity extends AppCompatActivity {
                     List<MessageDto> messages = conversation.getMessages() != null ? conversation.getMessages() : new ArrayList<>();
                     android.util.Log.d("ChatActivity", "Loaded " + messages.size() + " messages");
                     adapter.updateData(messages);
+                    lastMessageCount = messages.size();
                     
                     // Scroll to bottom
                     if (messages.size() > 0) {
@@ -230,11 +259,25 @@ public class ChatActivity extends AppCompatActivity {
                     ChatConversationDto conversation = response.body();
                     List<MessageDto> messages = conversation.getMessages() != null ? conversation.getMessages() : new ArrayList<>();
                     
+                    // Check for new messages from admin
+                    if (messages.size() > lastMessageCount) {
+                        // Có tin nhắn mới - kiểm tra xem có tin nhắn từ admin không
+                        for (int i = lastMessageCount; i < messages.size(); i++) {
+                            MessageDto newMessage = messages.get(i);
+                            // Nếu tin nhắn mới từ admin và activity không đang visible
+                            if (newMessage.isFromAdmin() && !isActivityVisible) {
+                                sendAdminMessageNotification(newMessage);
+                            }
+                        }
+                    }
+                    
                     // Only update if messages changed
                     if (messages.size() != adapter.getItemCount()) {
                         adapter.updateData(messages);
                         rvMessages.post(() -> rvMessages.smoothScrollToPosition(messages.size() - 1));
                     }
+                    
+                    lastMessageCount = messages.size();
                 } else {
                     android.util.Log.w("ChatActivity", "Failed to refresh messages. Code: " + response.code());
                 }
@@ -247,6 +290,46 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
     }
+    
+    
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                CHANNEL_ID,
+                "Chat Notifications",
+                NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Thông báo khi admin gửi tin nhắn");
+            channel.enableVibration(true);
+            channel.enableLights(true);
+            
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+    }
+    
+    private void sendAdminMessageNotification(MessageDto message) {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (notificationManager == null) return;
+        
+        String content = message.getContent();
+        if (content.length() > 100) {
+            content = content.substring(0, 100) + "...";
+        }
+        
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_notifications)
+                .setContentTitle("Tin nhắn từ Admin")
+                .setContentText(content)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(message.getContent()))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .build();
+        
+        notificationManager.notify(NOTIFICATION_ID, notification);
+    }
 
     @Override
     protected void onDestroy() {
@@ -256,19 +339,26 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (refreshHandler != null && refreshRunnable != null) {
-            refreshHandler.removeCallbacks(refreshRunnable);
-        }
-    }
 
     @Override
     protected void onResume() {
         super.onResume();
+        isActivityVisible = true;
         if (refreshHandler != null && refreshRunnable != null) {
             refreshHandler.postDelayed(refreshRunnable, REFRESH_INTERVAL);
+        }
+        // Reset message count when activity resumes to avoid duplicate notifications
+        if (adapter != null) {
+            lastMessageCount = adapter.getItemCount();
+        }
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        isActivityVisible = false;
+        if (refreshHandler != null && refreshRunnable != null) {
+            refreshHandler.removeCallbacks(refreshRunnable);
         }
     }
 }

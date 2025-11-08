@@ -1,7 +1,17 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.FlightBooking" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <!-- Edge-to-edge -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+
+        <!-- Shapes -->
+        <item name="shapeAppearanceSmallComponent">@style/Shape.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/Shape.Medium</item>
+        <item name="shapeAppearanceLargeComponent">@style/Shape.Large</item>
     </style>
+    
+    <!-- Fallback base style to satisfy any @style/Shape references in night mode -->
+    <style name="Shape" />
+    <!-- Shape styles are resolved from the light resources file -->
 </resources>

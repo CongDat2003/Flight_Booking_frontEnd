@@ -52,4 +52,12 @@ public class ApiServiceProvider {
     public static ChatApiEndpoint getChatApi() {
         return retrofit.create(ChatApiEndpoint.class);
     }
+
+    public static ServiceApiEndpoint getServiceApi() {
+        return retrofit.create(ServiceApiEndpoint.class);
+    }
+
+    public static AIChatApiEndpoint getAIChatApi() {
+        return retrofit.create(AIChatApiEndpoint.class);
+    }
 }

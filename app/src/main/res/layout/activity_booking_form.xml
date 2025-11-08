@@ -291,17 +291,19 @@
             </androidx.cardview.widget.CardView>
 
             <!-- Book Button -->
-            <Button
-                android:id="@+id/btn_book"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="🎉 XÁC NHẬN &amp; ĐẶT VÉ NGAY"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:background="@drawable/btn_confirm_booking_gradient"
-                android:elevation="8dp"
-                android:layout_marginBottom="20dp" />
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_book"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="🎉 XÁC NHẬN &amp; ĐẶT VÉ NGAY"
+        android:textAllCaps="false"
+        android:textColor="?attr/colorOnPrimary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:cornerRadius="16dp"
+        app:backgroundTint="?attr/colorPrimary"
+        android:elevation="8dp"
+        android:layout_marginBottom="20dp" />
 
             <!-- Security Notice -->
             <LinearLayout
