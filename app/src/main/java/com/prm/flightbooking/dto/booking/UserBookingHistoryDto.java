@@ -1,9 +1,11 @@
 package com.prm.flightbooking.dto.booking;
 
 import com.google.gson.annotations.SerializedName;
+import com.prm.flightbooking.dto.service.BookingServiceDto;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 public class UserBookingHistoryDto {
     @SerializedName("bookingId")
@@ -44,6 +46,9 @@ public class UserBookingHistoryDto {
 
     @SerializedName("canCancel")
     private boolean canCancel;
+
+    @SerializedName("services")
+    private List<BookingServiceDto> services;
 
     public UserBookingHistoryDto() {
     }
@@ -166,5 +171,13 @@ public class UserBookingHistoryDto {
 
     public void setCanCancel(boolean canCancel) {
         this.canCancel = canCancel;
+    }
+
+    public List<BookingServiceDto> getServices() {
+        return services;
+    }
+
+    public void setServices(List<BookingServiceDto> services) {
+        this.services = services;
     }
 }

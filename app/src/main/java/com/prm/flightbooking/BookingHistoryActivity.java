@@ -25,6 +25,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.prm.flightbooking.api.ApiServiceProvider;
 import com.prm.flightbooking.api.BookingApiEndpoint;
 import com.prm.flightbooking.dto.booking.UserBookingHistoryDto;
+import com.prm.flightbooking.dto.service.BookingServiceDto;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
@@ -444,6 +445,9 @@ public class BookingHistoryActivity extends AppCompatActivity {
             long minutes = (durationMillis / (1000 * 60)) % 60;
             holder.tvDuration.setText(String.format(new Locale("vi", "VN"), "%d giờ %d phút", hours, minutes));
 
+            // Hiển thị dịch vụ
+            displayServices(holder, booking.getServices());
+
             // Nút hành động
             holder.btnViewDetail.setText("Xem chi tiết");
 
@@ -517,6 +521,57 @@ public class BookingHistoryActivity extends AppCompatActivity {
         @Override
         public int getItemCount() {
             return bookings.size();
+        }
+
+        // Hiển thị dịch vụ
+        private void displayServices(ViewHolder holder, List<BookingServiceDto> services) {
+            LinearLayout servicesContainer = holder.itemView.findViewById(R.id.services_container);
+            LinearLayout llServices = holder.itemView.findViewById(R.id.ll_services);
+            
+            if (servicesContainer == null || llServices == null) {
+                return;
+            }
+            
+            // Xóa các view cũ
+            servicesContainer.removeAllViews();
+            
+            if (services == null || services.isEmpty()) {
+                llServices.setVisibility(View.GONE);
+                return;
+            }
+            
+            llServices.setVisibility(View.VISIBLE);
+            
+            // Hiển thị từng dịch vụ
+            for (BookingServiceDto service : services) {
+                TextView serviceTextView = new TextView(holder.itemView.getContext());
+                serviceTextView.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ));
+                serviceTextView.setPadding(0, 4, 0, 4);
+                serviceTextView.setTextSize(11f);
+                serviceTextView.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.grey_600));
+                
+                String serviceName = "";
+                if (service.getMeal() != null) {
+                    serviceName = service.getMeal().getMealName();
+                } else if (service.getLuggage() != null) {
+                    serviceName = service.getLuggage().getLuggageName();
+                } else if (service.getInsurance() != null) {
+                    serviceName = service.getInsurance().getInsuranceName();
+                }
+                
+                NumberFormat numberFormat = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+                BigDecimal totalServicePrice = service.getPrice().multiply(new BigDecimal(service.getQuantity()));
+                String serviceText = String.format("• %s (x%d) - %s VND", 
+                    serviceName, 
+                    service.getQuantity(), 
+                    numberFormat.format(totalServicePrice));
+                serviceTextView.setText(serviceText);
+                
+                servicesContainer.addView(serviceTextView);
+            }
         }
 
         // ViewHolder cho từng item trong danh sách

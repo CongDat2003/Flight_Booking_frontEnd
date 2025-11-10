@@ -3,7 +3,6 @@ package com.prm.flightbooking;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -12,12 +11,15 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
 import com.google.android.material.tabs.TabLayout;
 import com.google.gson.Gson;
 import com.prm.flightbooking.dto.advancedsearch.FlightSearchResultDto;
 import com.prm.flightbooking.dto.flight.FlightResponseDto;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -30,21 +32,22 @@ public class FlightResultsActivity extends AppCompatActivity {
     private TextView tvHeaderTitle;
     private TextView tvHeaderSubtitle;
     private TabLayout tabLayout;
+    private Chip chipSortPrice, chipSortTime, chipSortDuration;
+    private android.view.View llEmptyState;
     private FlightAdapter flightAdapter;
     private SharedPreferences sharedPreferences;
-    private List<FlightResponseDto> allFlights; // Tất cả chuyến bay
-    private Map<String, List<FlightResponseDto>> flightsByStatus; // Chuyến bay phân loại theo status
-    private String currentFilter = "ALL"; // Filter hiện tại
+    private List<FlightResponseDto> allFlights;
+    private Map<String, List<FlightResponseDto>> flightsByStatus;
+    private String currentFilter = "ALL";
+    private String currentSort = "NONE"; // NONE, PRICE_ASC, PRICE_DESC, TIME_ASC, TIME_DESC, DURATION_ASC, DURATION_DESC
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_flight_results);
 
-        // Khởi tạo SharedPreferences
         sharedPreferences = getSharedPreferences("user_prefs", MODE_PRIVATE);
 
-        // Kiểm tra trạng thái đăng nhập
         if (!isLoggedIn()) {
             redirectToLogin();
             return;
@@ -53,9 +56,9 @@ public class FlightResultsActivity extends AppCompatActivity {
         bindingView();
         bindingAction();
         setupRecyclerView();
-        setupTabLayout();
+        setupTabs();
+        setupSortChips();
 
-        // Xử lý kết quả tìm kiếm
         processSearchResults();
     }
 
@@ -65,6 +68,10 @@ public class FlightResultsActivity extends AppCompatActivity {
         tvHeaderTitle = findViewById(R.id.tv_header_title);
         tvHeaderSubtitle = findViewById(R.id.tv_header_subtitle);
         tabLayout = findViewById(R.id.tab_layout);
+        chipSortPrice = findViewById(R.id.chip_sort_price);
+        chipSortTime = findViewById(R.id.chip_sort_time);
+        chipSortDuration = findViewById(R.id.chip_sort_duration);
+        llEmptyState = findViewById(R.id.ll_empty_state);
     }
 
     private void bindingAction() {
@@ -73,26 +80,25 @@ public class FlightResultsActivity extends AppCompatActivity {
         }
     }
 
-    // Thiết lập RecyclerView
     private void setupRecyclerView() {
         rvFlights.setLayoutManager(new LinearLayoutManager(this));
         allFlights = new ArrayList<>();
         flightsByStatus = new HashMap<>();
 
-        // Khởi tạo adapter với listener để chọn chuyến bay
         flightAdapter = new FlightAdapter(allFlights, this::onFlightSelected);
         rvFlights.setAdapter(flightAdapter);
     }
 
-    // Thiết lập TabLayout để phân loại chuyến bay
-    private void setupTabLayout() {
-        // 4 tab theo yêu cầu: Tất cả, Đã lên lịch, Bị hủy, Bị hoãn
+    private void setupTabs() {
+        if (tabLayout == null) return;
+
         tabLayout.addTab(tabLayout.newTab().setText("Tất cả"));
         tabLayout.addTab(tabLayout.newTab().setText("Đã lên lịch"));
-        tabLayout.addTab(tabLayout.newTab().setText("Bị hủy"));
         tabLayout.addTab(tabLayout.newTab().setText("Bị hoãn"));
+        tabLayout.addTab(tabLayout.newTab().setText("Đã hủy"));
 
-        // Xử lý khi chọn tab
+        tabLayout.selectTab(tabLayout.getTabAt(0));
+
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -105,26 +111,83 @@ public class FlightResultsActivity extends AppCompatActivity {
                         currentFilter = "SCHEDULED";
                         break;
                     case 2:
-                        currentFilter = "CANCELLED";
-                        break;
-                    case 3:
                         currentFilter = "DELAYED";
                         break;
+                    case 3:
+                        currentFilter = "CANCELLED";
+                        break;
                 }
-                filterFlightsByStatus();
+                applyFiltersAndSort();
             }
 
             @Override
             public void onTabUnselected(TabLayout.Tab tab) {
+                // Do nothing
             }
 
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
+                // Do nothing
             }
         });
     }
 
-    // Phân loại chuyến bay theo trạng thái
+    private void setupSortChips() {
+        if (chipSortPrice == null || chipSortTime == null || chipSortDuration == null) return;
+
+        chipSortPrice.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                uncheckOtherSortChips(chipSortPrice);
+                // Toggle between ascending and descending
+                if (currentSort.equals("PRICE_ASC")) {
+                    currentSort = "PRICE_DESC";
+                } else {
+                    currentSort = "PRICE_ASC";
+                }
+                applyFiltersAndSort();
+            } else {
+                currentSort = "NONE";
+                applyFiltersAndSort();
+            }
+        });
+
+        chipSortTime.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                uncheckOtherSortChips(chipSortTime);
+                if (currentSort.equals("TIME_ASC")) {
+                    currentSort = "TIME_DESC";
+                } else {
+                    currentSort = "TIME_ASC";
+                }
+                applyFiltersAndSort();
+            } else {
+                currentSort = "NONE";
+                applyFiltersAndSort();
+            }
+        });
+
+        chipSortDuration.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                uncheckOtherSortChips(chipSortDuration);
+                if (currentSort.equals("DURATION_ASC")) {
+                    currentSort = "DURATION_DESC";
+                } else {
+                    currentSort = "DURATION_ASC";
+                }
+                applyFiltersAndSort();
+            } else {
+                currentSort = "NONE";
+                applyFiltersAndSort();
+            }
+        });
+    }
+
+    private void uncheckOtherSortChips(Chip selectedChip) {
+        if (selectedChip != chipSortPrice) chipSortPrice.setChecked(false);
+        if (selectedChip != chipSortTime) chipSortTime.setChecked(false);
+        if (selectedChip != chipSortDuration) chipSortDuration.setChecked(false);
+    }
+
     private void categorizeFlights(List<FlightResponseDto> flights) {
         flightsByStatus.clear();
         flightsByStatus.put("SCHEDULED", new ArrayList<>());
@@ -134,71 +197,93 @@ public class FlightResultsActivity extends AppCompatActivity {
         for (FlightResponseDto flight : flights) {
             String status = flight.getStatus() != null ? flight.getStatus().toUpperCase(Locale.ROOT) : "UNKNOWN";
             
-            // Phân loại vào tab tương ứng
             if ("SCHEDULED".equals(status) || "CONFIRMED".equals(status) || "PREPARING".equals(status) || "DEPARTED".equals(status)) {
-                // Gom các trạng thái "đã lên lịch" vào tab "Đã lên lịch"
                 flightsByStatus.get("SCHEDULED").add(flight);
             } else if ("DELAYED".equals(status) || "POSTPONED".equals(status)) {
-                // Trạng thái "bị hoãn"
                 flightsByStatus.get("DELAYED").add(flight);
             } else if ("CANCELLED".equals(status) || "CANCELED".equals(status)) {
-                // Trạng thái "đã hủy"
                 flightsByStatus.get("CANCELLED").add(flight);
             }
-            // COMPLETED và các trạng thái khác không được thêm vào bất kỳ tab nào
-            // (người dùng có thể xem trong tab "Tất cả")
         }
     }
 
-    // Lọc chuyến bay theo trạng thái được chọn
-    private void filterFlightsByStatus() {
+    private void applyFiltersAndSort() {
         List<FlightResponseDto> filteredFlights;
+        
+        // Filter by status
         if ("ALL".equals(currentFilter)) {
-            // Tab "Tất cả" - hiển thị tất cả chuyến bay
             filteredFlights = new ArrayList<>(allFlights);
         } else {
-            // Các tab khác - lọc theo trạng thái
-            filteredFlights = flightsByStatus.getOrDefault(currentFilter, new ArrayList<>());
+            filteredFlights = new ArrayList<>(flightsByStatus.getOrDefault(currentFilter, new ArrayList<>()));
         }
+
+        // Sort
+        if (!"NONE".equals(currentSort)) {
+            sortFlights(filteredFlights);
+        }
+
         flightAdapter.setFlights(filteredFlights);
-        
-        // Cập nhật header
         updateHeader(filteredFlights.size());
+        updateEmptyState(filteredFlights.isEmpty());
     }
 
-    // Cập nhật header với số lượng chuyến bay
+    private void sortFlights(List<FlightResponseDto> flights) {
+        switch (currentSort) {
+            case "PRICE_ASC":
+                Collections.sort(flights, (f1, f2) -> 
+                    BigDecimal.valueOf(f1.getBasePrice()).compareTo(BigDecimal.valueOf(f2.getBasePrice())));
+                break;
+            case "PRICE_DESC":
+                Collections.sort(flights, (f1, f2) -> 
+                    BigDecimal.valueOf(f2.getBasePrice()).compareTo(BigDecimal.valueOf(f1.getBasePrice())));
+                break;
+            case "TIME_ASC":
+                Collections.sort(flights, (f1, f2) -> 
+                    f1.getDepartureTime().compareTo(f2.getDepartureTime()));
+                break;
+            case "TIME_DESC":
+                Collections.sort(flights, (f1, f2) -> 
+                    f2.getDepartureTime().compareTo(f1.getDepartureTime()));
+                break;
+            case "DURATION_ASC":
+                Collections.sort(flights, (f1, f2) -> {
+                    long d1 = f1.getArrivalTime().getTime() - f1.getDepartureTime().getTime();
+                    long d2 = f2.getArrivalTime().getTime() - f2.getDepartureTime().getTime();
+                    return Long.compare(d1, d2);
+                });
+                break;
+            case "DURATION_DESC":
+                Collections.sort(flights, (f1, f2) -> {
+                    long d1 = f1.getArrivalTime().getTime() - f1.getDepartureTime().getTime();
+                    long d2 = f2.getArrivalTime().getTime() - f2.getDepartureTime().getTime();
+                    return Long.compare(d2, d1);
+                });
+                break;
+        }
+    }
+    
+    private void updateEmptyState(boolean isEmpty) {
+        if (llEmptyState != null) {
+            llEmptyState.setVisibility(isEmpty ? android.view.View.VISIBLE : android.view.View.GONE);
+        }
+        if (rvFlights != null) {
+            rvFlights.setVisibility(isEmpty ? android.view.View.GONE : android.view.View.VISIBLE);
+        }
+    }
+
     private void updateHeader(int count) {
-        String statusText = getStatusText(currentFilter);
         String headerMessage = String.format("Tìm thấy %d chuyến bay", count);
         if (tvHeaderSubtitle != null) {
             tvHeaderSubtitle.setText(headerMessage);
         }
     }
 
-    // Lấy text hiển thị cho trạng thái
-    private String getStatusText(String status) {
-        switch (status) {
-            case "ALL":
-                return "tất cả";
-            case "SCHEDULED":
-                return "đã lên lịch";
-            case "DELAYED":
-                return "bị hoãn";
-            case "CANCELLED":
-                return "đã hủy";
-            default:
-                return "";
-        }
-    }
-
-    // Xử lý khi người dùng chọn chuyến bay
     private void onFlightSelected(int flightId) {
         Intent intent = new Intent(FlightResultsActivity.this, ChooseSeatsActivity.class);
         intent.putExtra("flightId", flightId);
         startActivity(intent);
     }
 
-    // Xử lý kết quả tìm kiếm từ Intent
     private void processSearchResults() {
         String resultJson = getIntent().getStringExtra("search_results_json");
 
@@ -209,7 +294,6 @@ public class FlightResultsActivity extends AppCompatActivity {
         }
     }
 
-    // Phân tích dữ liệu JSON kết quả tìm kiếm
     private void parseSearchResults(String resultJson) {
         try {
             Gson gson = new Gson();
@@ -225,42 +309,42 @@ public class FlightResultsActivity extends AppCompatActivity {
         }
     }
 
-    // Cập nhật giao diện với kết quả tìm kiếm
     private void updateUIWithResults(FlightSearchResultDto result) {
         List<FlightResponseDto> outboundFlights = result.getOutboundFlights();
         List<FlightResponseDto> returnFlights = result.getReturnFlights();
 
-        // Lưu tất cả chuyến bay
         allFlights.clear();
         allFlights.addAll(outboundFlights);
         if (returnFlights != null) {
             allFlights.addAll(returnFlights);
         }
 
-        // Phân loại chuyến bay theo trạng thái
         categorizeFlights(allFlights);
 
-        // Hiển thị mặc định tab "Tất cả"
         currentFilter = "ALL";
-        if (tabLayout.getTabCount() > 0) {
-            tabLayout.getTabAt(0).select(); // Chọn tab đầu tiên (Tất cả)
+        currentSort = "NONE";
+        if (tabLayout != null && tabLayout.getTabCount() > 0) {
+            tabLayout.selectTab(tabLayout.getTabAt(0));
         }
-        filterFlightsByStatus();
+        // Uncheck all sort chips
+        if (chipSortPrice != null) chipSortPrice.setChecked(false);
+        if (chipSortTime != null) chipSortTime.setChecked(false);
+        if (chipSortDuration != null) chipSortDuration.setChecked(false);
+        
+        applyFiltersAndSort();
 
         Toast.makeText(this, "Tìm thấy " + allFlights.size() + " chuyến bay", Toast.LENGTH_SHORT).show();
     }
 
-
-    // Hiển thị thông báo không có kết quả
     private void showNoResultsMessage() {
         String noResultsMessage = "Không tìm thấy chuyến bay nào";
         if (tvHeaderSubtitle != null) {
             tvHeaderSubtitle.setText(noResultsMessage);
         }
+        updateEmptyState(true);
         Toast.makeText(this, noResultsMessage, Toast.LENGTH_SHORT).show();
     }
 
-    // Xử lý lỗi phân tích dữ liệu
     private void handleParseError(Exception e) {
         String errorMessage = "Lỗi xử lý dữ liệu tìm kiếm";
         if (tvHeaderSubtitle != null) {
@@ -269,13 +353,11 @@ public class FlightResultsActivity extends AppCompatActivity {
         Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
     }
 
-    // Kiểm tra trạng thái đăng nhập
     private boolean isLoggedIn() {
         return sharedPreferences.getBoolean("is_logged_in", false) &&
                 sharedPreferences.getInt("user_id", -1) > 0;
     }
 
-    // Chuyển hướng đến màn hình đăng nhập
     private void redirectToLogin() {
         Toast.makeText(this, "Vui lòng đăng nhập để tiếp tục", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(this, Login.class);
@@ -287,10 +369,43 @@ public class FlightResultsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        // Kiểm tra lại trạng thái đăng nhập khi quay lại activity
         if (!isLoggedIn()) {
             redirectToLogin();
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

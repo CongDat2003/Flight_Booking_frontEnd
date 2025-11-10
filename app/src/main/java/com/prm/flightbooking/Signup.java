@@ -291,8 +291,10 @@ public class Signup extends AppCompatActivity {
                     // Lưu thông tin user vào SharedPreferences
                     saveUserInfo(user);
 
-                    // Chuyển màn
+                    // Chuyển màn và truyền thông tin đăng nhập để tự động điền
                     Intent intent = new Intent(Signup.this, Login.class);
+                    intent.putExtra("registered_username", username);
+                    intent.putExtra("registered_password", password);
                     startActivity(intent);
                     finish();
                 } else {

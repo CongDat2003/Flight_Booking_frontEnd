@@ -149,6 +149,19 @@ public class ChatActivity extends AppCompatActivity {
         // Create message DTO
         CreateMessageDto messageDto = new CreateMessageDto(userId, content);
 
+        // Create user message DTO to display immediately
+        MessageDto userMessage = new MessageDto();
+        userMessage.setContent(content);
+        userMessage.setSenderType("USER");
+        userMessage.setUserId(userId);
+        userMessage.setCreatedAt(new java.util.Date());
+        userMessage.setStatus("SENT");
+        userMessage.setAutoReply(false);
+
+        // Add user message to adapter immediately
+        adapter.addMessage(userMessage);
+        rvMessages.smoothScrollToPosition(adapter.getItemCount() - 1);
+
         // Show loading
         progressBar.setVisibility(View.VISIBLE);
 
@@ -159,10 +172,12 @@ public class ChatActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call<MessageDto> call, @NonNull Response<MessageDto> response) {
                 progressBar.setVisibility(View.GONE);
                 if (response.isSuccessful() && response.body() != null) {
-                    // Add message to adapter
+                    // Add AI response to adapter
                     adapter.addMessage(response.body());
                     // Scroll to bottom
                     rvMessages.smoothScrollToPosition(adapter.getItemCount() - 1);
+                    // Update lastMessageCount to prevent duplicate notifications
+                    lastMessageCount = adapter.getItemCount();
                 } else {
                     Toast.makeText(ChatActivity.this, "Không thể gửi tin nhắn: " + response.message(), Toast.LENGTH_SHORT).show();
                 }

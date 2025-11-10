@@ -120,12 +120,28 @@ public class BookingActivity extends AppCompatActivity {
 
                 // Kiểm tra xem API có trả về dữ liệu thành công không
                 if (response.isSuccessful() && response.body() != null) {
-                    // Xóa danh sách cũ và cập nhật danh sách mới
+                    // Lọc chỉ lấy các chuyến bay có trạng thái SCHEDULED (Đã lên lịch)
+                    List<AdminFlightResponseDto> allFlights = response.body();
+                    List<AdminFlightResponseDto> scheduledFlights = new ArrayList<>();
+                    
+                    for (AdminFlightResponseDto flight : allFlights) {
+                        String status = flight.getStatus();
+                        if (status != null && status.equalsIgnoreCase("SCHEDULED")) {
+                            scheduledFlights.add(flight);
+                        }
+                    }
+                    
+                    // Xóa danh sách cũ và cập nhật danh sách mới (chỉ SCHEDULED)
                     flightList.clear();
-                    flightList.addAll(response.body());
+                    flightList.addAll(scheduledFlights);
                     // Cập nhật adapter để hiển thị danh sách mới
                     flightAdapter.setFlights(flightList);
-                    Toast.makeText(BookingActivity.this, "Tải danh sách chuyến bay thành công!", Toast.LENGTH_SHORT).show();
+                    
+                    if (scheduledFlights.isEmpty()) {
+                        Toast.makeText(BookingActivity.this, "Không có chuyến bay nào đã lên lịch", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(BookingActivity.this, "Tải danh sách chuyến bay thành công!", Toast.LENGTH_SHORT).show();
+                    }
                 } else {
                     // Xử lý lỗi nếu API trả về không thành công
                     handleErrorResponse(response);

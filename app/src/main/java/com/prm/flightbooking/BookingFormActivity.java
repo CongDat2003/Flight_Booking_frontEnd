@@ -39,8 +39,10 @@ import com.prm.flightbooking.dialogs.PaymentMethodSelectionDialog;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -344,10 +346,7 @@ public class BookingFormActivity extends AppCompatActivity {
         sendBookingSuccessNotification(bookingReference, bookingId);
         
         // Add services to booking
-        addServicesToBooking(bookingId);
-        
-        // Navigate to PayActivity để thanh toán sau (dùng cho QR Code hoặc thanh toán lại)
-        navigateToPayment(bookingId);
+        addServicesToBooking(bookingId, () -> navigateToPayment(bookingId));
     }
     
     private void handleBookingSuccessForPayment(BookingResponseDto bookingResponse, String paymentMethod) {
@@ -359,14 +358,13 @@ public class BookingFormActivity extends AppCompatActivity {
         sendBookingSuccessNotification(bookingReference, bookingId);
         
         // Add services to booking
-        addServicesToBooking(bookingId);
-        
-        // Tạo payment và mở WebView thanh toán ngay
-        createPaymentAndOpenWebView(bookingId, paymentMethod);
+        addServicesToBooking(bookingId, () -> createPaymentAndOpenWebView(bookingId, paymentMethod));
     }
     
-    private void addServicesToBooking(int bookingId) {
-        // Add meals
+    private void addServicesToBooking(int bookingId, Runnable onComplete) {
+        List<AddServiceToBookingDto> pendingRequests = new ArrayList<>();
+
+        // Prepare meal services
         if (selectedMeals != null && selectedMeals.length > 0) {
             for (int i = 0; i < selectedMeals.length; i += 2) {
                 int mealId = selectedMeals[i];
@@ -376,21 +374,11 @@ public class BookingFormActivity extends AppCompatActivity {
                 dto.setServiceType("MEAL");
                 dto.setMealId(mealId);
                 dto.setQuantity(quantity);
-                serviceApi.addServiceToBooking(dto).enqueue(new Callback<com.prm.flightbooking.dto.service.BookingServiceDto>() {
-                    @Override
-                    public void onResponse(Call<com.prm.flightbooking.dto.service.BookingServiceDto> call, Response<com.prm.flightbooking.dto.service.BookingServiceDto> response) {
-                        // Service added successfully
-                    }
-
-                    @Override
-                    public void onFailure(Call<com.prm.flightbooking.dto.service.BookingServiceDto> call, Throwable t) {
-                        Log.e(TAG, "Error adding meal service: " + t.getMessage());
-                    }
-                });
+                pendingRequests.add(dto);
             }
         }
-        
-        // Add luggages
+
+        // Prepare luggage services
         if (selectedLuggages != null && selectedLuggages.length > 0) {
             for (int i = 0; i < selectedLuggages.length; i += 2) {
                 int luggageId = selectedLuggages[i];
@@ -400,21 +388,11 @@ public class BookingFormActivity extends AppCompatActivity {
                 dto.setServiceType("LUGGAGE");
                 dto.setLuggageId(luggageId);
                 dto.setQuantity(quantity);
-                serviceApi.addServiceToBooking(dto).enqueue(new Callback<com.prm.flightbooking.dto.service.BookingServiceDto>() {
-                    @Override
-                    public void onResponse(Call<com.prm.flightbooking.dto.service.BookingServiceDto> call, Response<com.prm.flightbooking.dto.service.BookingServiceDto> response) {
-                        // Service added successfully
-                    }
-
-                    @Override
-                    public void onFailure(Call<com.prm.flightbooking.dto.service.BookingServiceDto> call, Throwable t) {
-                        Log.e(TAG, "Error adding luggage service: " + t.getMessage());
-                    }
-                });
+                pendingRequests.add(dto);
             }
         }
-        
-        // Add insurances
+
+        // Prepare insurance services
         if (selectedInsurances != null && selectedInsurances.length > 0) {
             for (int i = 0; i < selectedInsurances.length; i += 2) {
                 int insuranceId = selectedInsurances[i];
@@ -424,18 +402,45 @@ public class BookingFormActivity extends AppCompatActivity {
                 dto.setServiceType("INSURANCE");
                 dto.setInsuranceId(insuranceId);
                 dto.setQuantity(quantity);
-                serviceApi.addServiceToBooking(dto).enqueue(new Callback<com.prm.flightbooking.dto.service.BookingServiceDto>() {
+                pendingRequests.add(dto);
+            }
+        }
+
+        if (pendingRequests.isEmpty()) {
+            if (onComplete != null) {
+                runOnUiThread(onComplete);
+            }
+            return;
+        }
+
+        AtomicInteger remaining = new AtomicInteger(pendingRequests.size());
+
+        Callback<com.prm.flightbooking.dto.service.BookingServiceDto> callback =
+                new Callback<com.prm.flightbooking.dto.service.BookingServiceDto>() {
+                    private void markComplete() {
+                        if (remaining.decrementAndGet() == 0 && onComplete != null) {
+                            runOnUiThread(onComplete);
+                        }
+                    }
+
                     @Override
-                    public void onResponse(Call<com.prm.flightbooking.dto.service.BookingServiceDto> call, Response<com.prm.flightbooking.dto.service.BookingServiceDto> response) {
-                        // Service added successfully
+                    public void onResponse(Call<com.prm.flightbooking.dto.service.BookingServiceDto> call,
+                                           Response<com.prm.flightbooking.dto.service.BookingServiceDto> response) {
+                        if (!response.isSuccessful()) {
+                            Log.e(TAG, "Failed to add service. Code: " + response.code());
+                        }
+                        markComplete();
                     }
 
                     @Override
                     public void onFailure(Call<com.prm.flightbooking.dto.service.BookingServiceDto> call, Throwable t) {
-                        Log.e(TAG, "Error adding insurance service: " + t.getMessage());
-                    }
-                });
+                        Log.e(TAG, "Error adding service: " + t.getMessage());
+                        markComplete();
             }
+                };
+
+        for (AddServiceToBookingDto request : pendingRequests) {
+            serviceApi.addServiceToBooking(request).enqueue(callback);
         }
     }
 

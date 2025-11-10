@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -62,105 +63,62 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.FlightView
         // Lấy dữ liệu chuyến bay tại vị trí hiện tại
         FlightInfo flight = flightList.get(position);
 
-        // Hiển thị thông tin chuyến bay lên các TextView
+        // Format Route: "Điểm đi (Mã) đến Điểm đến (Mã)" - Style ảnh 2
+        String departureAirport = flight.getDepartureAirport();
+        String arrivalAirport = flight.getArrivalAirport();
+        
+        // Extract airport code and city name
+        String departureCity = extractCityName(departureAirport);
+        String departureCode = extractAirportCode(departureAirport);
+        String arrivalCity = extractCityName(arrivalAirport);
+        String arrivalCode = extractAirportCode(arrivalAirport);
+        
+        String route = String.format("%s (%s) đến %s (%s)", 
+            departureCity, departureCode, arrivalCity, arrivalCode);
+        holder.tvRoute.setText(route);
+
+        // Format Departure Date: "d Tháng M, yyyy" - Giữ format từ ảnh 1
+        holder.tvDepartureDate.setText(dateFormat.format(flight.getDepartureTime()));
+
+        // Giữ nguyên thông tin từ ảnh 1
         holder.tvFlightNumber.setText(flight.getFlightNumber());
         holder.tvAirline.setText(flight.getAirlineName());
         holder.tvDepartureTime.setText(timeFormat.format(flight.getDepartureTime()));
         holder.tvArrivalTime.setText(timeFormat.format(flight.getArrivalTime()));
 
-        // Hiển thị ngày tháng năm bay
-        holder.tvFlightDate.setText(dateFormat.format(flight.getDepartureTime()));
+        // Lấy mã sân bay từ chuỗi mô tả
+        String departureCodeOnly = extractAirportCode(departureAirport);
+        String arrivalCodeOnly = extractAirportCode(arrivalAirport);
 
-        // Lấy mã sân bay từ chuỗi mô tả (ví dụ: "Sân bay Nội Bài (HAN)" -> "HAN")
-        String departureAirport = flight.getDepartureAirport().contains("(")
-                ? flight.getDepartureAirport().split(" \\(")[1].replace(")", "")
-                : flight.getDepartureAirport();
-        String arrivalAirport = flight.getArrivalAirport().contains("(")
-                ? flight.getArrivalAirport().split(" \\(")[1].replace(")", "")
-                : flight.getArrivalAirport();
+        holder.tvDepartureAirport.setText(departureCodeOnly);
+        holder.tvArrivalAirport.setText(arrivalCodeOnly);
 
-        holder.tvDepartureAirport.setText(departureAirport);
-        holder.tvArrivalAirport.setText(arrivalAirport);
-
-        // Hiển thị giá vé với định dạng tiền tệ
-        holder.tvPrice.setText(String.format("%s VND", currencyFormat.format(flight.getBasePrice())));
-
-        // Hiển thị trạng thái chuyến bay với màu sắc phù hợp
-        String status = flight.getStatus();
-        String statusText = convertStatusToVietnamese(status);
+        // Format Price: "XXX,XXX VND*" - Style ảnh 2
+        NumberFormat numberFormat = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+        String formattedPrice = numberFormat.format(flight.getBasePrice());
+        holder.tvPrice.setText(String.format("%s VND*", formattedPrice));
         
-        // Sử dụng Chip nếu có, nếu không thì dùng TextView (backward compatibility)
+        // Status - chỉ hiển thị "Đã lên lịch" vì đã lọc ở BookingActivity
         if (holder.chipStatus != null) {
-            holder.chipStatus.setText(statusText);
-            // Đặt màu cho status chip
-            int chipBgColor;
-            int chipStrokeColor;
-            int chipTextColor;
-            if ("CANCELLED".equalsIgnoreCase(status)) {
-                chipBgColor = Color.parseColor("#FFEBEE"); // Light Red
-                chipStrokeColor = Color.parseColor("#F44336"); // Red
-                chipTextColor = Color.parseColor("#F44336");
-            } else if ("DELAYED".equalsIgnoreCase(status)) {
-                chipBgColor = Color.parseColor("#FFF3E0"); // Light Orange
-                chipStrokeColor = Color.parseColor("#FF9800"); // Orange
-                chipTextColor = Color.parseColor("#FF9800");
-            } else if ("COMPLETED".equalsIgnoreCase(status)) {
-                chipBgColor = Color.parseColor("#F5F5F5"); // Light Gray
-                chipStrokeColor = Color.parseColor("#757575"); // Gray
-                chipTextColor = Color.parseColor("#757575");
-            } else {
-                // SCHEDULED, PREPARING, DEPARTED
-                chipBgColor = Color.parseColor("#E8F5E8"); // Light Green
-                chipStrokeColor = Color.parseColor("#4CAF50"); // Green
-                chipTextColor = Color.parseColor("#4CAF50");
-            }
+            holder.chipStatus.setText("Đã lên lịch");
+            // Màu xanh lá cho trạng thái "Đã lên lịch"
+            int chipBgColor = Color.parseColor("#E8F5E8"); // Light Green
+            int chipStrokeColor = Color.parseColor("#4CAF50"); // Green
+            int chipTextColor = Color.parseColor("#4CAF50");
+            
             holder.chipStatus.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(chipBgColor));
             holder.chipStatus.setChipStrokeColor(android.content.res.ColorStateList.valueOf(chipStrokeColor));
+            holder.chipStatus.setChipStrokeWidth(1.5f);
             holder.chipStatus.setTextColor(chipTextColor);
-        } else if (holder.tvStatus != null) {
-            // Fallback cho TextView (backward compatibility)
-            holder.tvStatus.setText(statusText);
-            int textColor = Color.WHITE;
-            int bgColor;
-            if ("CANCELLED".equalsIgnoreCase(status)) {
-                bgColor = Color.parseColor("#F44336");
-            } else if ("DELAYED".equalsIgnoreCase(status)) {
-                bgColor = Color.parseColor("#FF9800");
-            } else if ("COMPLETED".equalsIgnoreCase(status)) {
-                bgColor = Color.parseColor("#757575");
-            } else {
-                bgColor = Color.parseColor("#4CAF50");
-            }
-            holder.tvStatus.setTextColor(textColor);
-            holder.tvStatus.setBackgroundColor(bgColor);
+            holder.chipStatus.setChipMinHeight(24);
         }
 
-        // Gán sự kiện click cho item nếu listener không null
+        // Gán sự kiện click cho nút "Đặt ngay" - Giữ nguyên logic
         if (listener != null) {
-            // Chặn đặt vé cho các chuyến bay: DELAYED, COMPLETED, CANCELLED, PREPARING, DEPARTED
-            if ("COMPLETED".equalsIgnoreCase(status)
-                    || "DELAYED".equalsIgnoreCase(status)
-                    || "CANCELLED".equalsIgnoreCase(status)
-                    || "PREPARING".equalsIgnoreCase(status)
-                    || "DEPARTED".equalsIgnoreCase(status)) {
-                // Hiển thị thông báo hợp lý tùy theo trạng thái
-                holder.itemView.setOnClickListener(v -> {
-                    String message = getStatusMessage(status);
-                    android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(holder.itemView.getContext());
-                    builder.setTitle("Không thể đặt vé");
-                    builder.setMessage(message);
-                    builder.setPositiveButton("Đã hiểu", null);
-                    builder.show();
-                });
-                // Làm mờ item để thể hiện không thể đặt
-                holder.itemView.setAlpha(0.6f);
-            } else {
-                // Cho phép click bình thường cho SCHEDULED
-                holder.itemView.setOnClickListener(v -> listener.onFlightClick(flight.getFlightId()));
-                holder.itemView.setAlpha(1.0f);
-            }
+            final int flightId = flight.getFlightId();
+            holder.btnBookNow.setOnClickListener(v -> listener.onFlightClick(flightId));
         } else {
-            holder.itemView.setOnClickListener(null); // Tránh lỗi nếu listener null
+            holder.btnBookNow.setOnClickListener(null);
         }
     }
 
@@ -172,14 +130,56 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.FlightView
     // Định dạng ngày tháng năm
     private SimpleDateFormat dateFormat = new SimpleDateFormat("d 'Tháng' M, yyyy", new Locale("vi", "VN"));
 
+    // Helper method to extract city name from airport string
+    private String extractCityName(String airportString) {
+        if (airportString == null || airportString.isEmpty()) {
+            return "N/A";
+        }
+        // Format: "Sân bay Nội Bài (HAN)" -> "Nội Bài"
+        // or "HAN" -> "HAN"
+        if (airportString.contains("(")) {
+            String[] parts = airportString.split("\\(");
+            if (parts.length > 0) {
+                String cityPart = parts[0].trim();
+                // Remove "Sân bay" prefix if exists
+                if (cityPart.startsWith("Sân bay")) {
+                    cityPart = cityPart.substring("Sân bay".length()).trim();
+                }
+                return cityPart;
+            }
+        }
+        return airportString;
+    }
+
+    // Helper method to extract airport code
+    private String extractAirportCode(String airportString) {
+        if (airportString == null || airportString.isEmpty()) {
+            return "N/A";
+        }
+        // Format: "Sân bay Nội Bài (HAN)" -> "HAN"
+        if (airportString.contains("(") && airportString.contains(")")) {
+            int start = airportString.indexOf("(");
+            int end = airportString.indexOf(")");
+            if (start < end) {
+                return airportString.substring(start + 1, end).trim();
+            }
+        }
+        // If no parentheses, assume the whole string is the code
+        return airportString.length() <= 3 ? airportString : "N/A";
+    }
+
     // ViewHolder chứa các view trong item_flight
     static class FlightViewHolder extends RecyclerView.ViewHolder {
-        TextView tvFlightNumber, tvAirline, tvDepartureTime, tvArrivalTime, tvDepartureAirport, tvArrivalAirport, tvPrice, tvFlightDate;
+        TextView tvRoute, tvDepartureDate, tvFlightNumber, tvAirline;
+        TextView tvDepartureTime, tvArrivalTime, tvDepartureAirport, tvArrivalAirport;
+        TextView tvPrice;
         Chip chipStatus;
-        TextView tvStatus; // Fallback for backward compatibility
+        Button btnBookNow;
 
         FlightViewHolder(@NonNull View itemView) {
             super(itemView);
+            tvRoute = itemView.findViewById(R.id.tv_route);
+            tvDepartureDate = itemView.findViewById(R.id.tv_departure_date);
             tvFlightNumber = itemView.findViewById(R.id.tv_flight_number);
             tvAirline = itemView.findViewById(R.id.tv_airline);
             tvDepartureTime = itemView.findViewById(R.id.tv_departure_time);
@@ -188,8 +188,7 @@ public class FlightAdapter extends RecyclerView.Adapter<FlightAdapter.FlightView
             tvArrivalAirport = itemView.findViewById(R.id.tv_arrival_airport);
             tvPrice = itemView.findViewById(R.id.tv_price);
             chipStatus = itemView.findViewById(R.id.chip_status);
-            tvStatus = itemView.findViewById(R.id.tv_status); // Fallback
-            tvFlightDate = itemView.findViewById(R.id.tv_flight_date);
+            btnBookNow = itemView.findViewById(R.id.btn_book_now);
         }
     }
 

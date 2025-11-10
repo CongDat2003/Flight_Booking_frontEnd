@@ -29,7 +29,7 @@ public class MainMenuActivity extends AppCompatActivity {
     private ImageView ivAvatar;
     // Legacy views (may be null in redesigned layout)
     private Button btnBannerBook;
-    private LinearLayout menuBookFlight, menuMyTrips, menuNotifications, menuProfile, menuAIPlan, menuAIChat;
+    private View menuBookFlight, menuMyTrips, menuNotifications, menuProfile, menuAIPlan, menuAIChat;
     private TextView tvNotificationsBadge;
     private BottomNavigationView bottomNavigation;
 
@@ -105,16 +105,37 @@ public class MainMenuActivity extends AppCompatActivity {
     // Start animation cho AI Chatbot icon
     private void startAIChatIconAnimation() {
         if (menuAIChat != null) {
-            // ImageView là child đầu tiên của LinearLayout
-            for (int i = 0; i < menuAIChat.getChildCount(); i++) {
-                View child = menuAIChat.getChildAt(i);
-                if (child instanceof ImageView) {
-                    ImageView iconView = (ImageView) child;
-                    Drawable drawable = iconView.getDrawable();
-                    if (drawable instanceof Animatable) {
-                        ((Animatable) drawable).start();
+            // Tìm ImageView với id iv_ai_chat_icon hoặc tìm trong child views
+            ImageView iconView = menuAIChat.findViewById(R.id.iv_ai_chat_icon);
+            if (iconView == null) {
+                // Fallback: tìm ImageView trong child views
+                if (menuAIChat instanceof android.view.ViewGroup) {
+                    android.view.ViewGroup group = (android.view.ViewGroup) menuAIChat;
+                    for (int i = 0; i < group.getChildCount(); i++) {
+                        View child = group.getChildAt(i);
+                        if (child instanceof ImageView) {
+                            iconView = (ImageView) child;
+                            break;
+                        } else if (child instanceof android.view.ViewGroup) {
+                            // Tìm trong ViewGroup (LinearLayout)
+                            android.view.ViewGroup subGroup = (android.view.ViewGroup) child;
+                            for (int j = 0; j < subGroup.getChildCount(); j++) {
+                                View subChild = subGroup.getChildAt(j);
+                                if (subChild instanceof ImageView) {
+                                    iconView = (ImageView) subChild;
+                                    break;
+                                }
+                            }
+                            if (iconView != null) break;
+                        }
                     }
-                    break;
+                }
+            }
+            
+            if (iconView != null) {
+                Drawable drawable = iconView.getDrawable();
+                if (drawable instanceof Animatable) {
+                    ((Animatable) drawable).start();
                 }
             }
         }

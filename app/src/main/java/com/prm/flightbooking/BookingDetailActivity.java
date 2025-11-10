@@ -464,7 +464,7 @@ public class BookingDetailActivity extends AppCompatActivity {
         fetchAndDisplayServices(bookingId);
 
         // Hiển thị nút hủy vé nếu có thể hủy
-        updateCancelButton(bookingDetail.getBookingStatus());
+        updateCancelButton(bookingDetail.getBookingStatus(), bookingDetail.getFlight());
     }
 
     // Hiển thị thông tin đặt vé cơ bản
@@ -636,10 +636,33 @@ public class BookingDetailActivity extends AppCompatActivity {
     }
 
     // Cập nhật nút hủy vé
-    private void updateCancelButton(String bookingStatus) {
+    private void updateCancelButton(String bookingStatus, FlightDetailDto flight) {
         if ("CONFIRMED".equalsIgnoreCase(bookingStatus)) {
-            btnCancelBooking.setVisibility(View.VISIBLE);
-            btnCancelBooking.setText("Hủy vé");
+            // Kiểm tra xem có thể hủy không (phải còn ít nhất 24 giờ trước giờ đi)
+            boolean canCancel = true;
+            String cancelMessage = "Hủy vé";
+            
+            if (flight != null && flight.getDepartureTime() != null) {
+                long departureTime = flight.getDepartureTime().getTime();
+                long currentTime = System.currentTimeMillis();
+                long hoursUntilDeparture = (departureTime - currentTime) / (1000 * 60 * 60);
+                
+                if (hoursUntilDeparture <= 24) {
+                    canCancel = false;
+                    cancelMessage = "Không thể hủy vé trong vòng 24 giờ trước giờ đi";
+                }
+            }
+            
+            if (canCancel) {
+                btnCancelBooking.setVisibility(View.VISIBLE);
+                btnCancelBooking.setText("Hủy vé");
+                btnCancelBooking.setEnabled(true);
+            } else {
+                btnCancelBooking.setVisibility(View.VISIBLE);
+                btnCancelBooking.setText(cancelMessage);
+                btnCancelBooking.setEnabled(false);
+                btnCancelBooking.setAlpha(0.5f); // Làm mờ nút
+            }
         } else {
             btnCancelBooking.setVisibility(View.GONE);
         }
@@ -733,7 +756,8 @@ public class BookingDetailActivity extends AppCompatActivity {
             noServices.setText("Không có dịch vụ nào được chọn");
             noServices.setTextColor(getResources().getColor(android.R.color.darker_gray));
             noServices.setTextSize(14f);
-            noServices.setPadding(0, 16, 0, 16);
+            noServices.setPadding(32, 24, 32, 24);
+            noServices.setGravity(android.view.Gravity.CENTER);
             servicesContainer.addView(noServices);
             return;
         }
@@ -753,100 +777,189 @@ public class BookingDetailActivity extends AppCompatActivity {
             }
         }
 
-        // Hiển thị đồ ăn/đồ uống
+        // Hiển thị đồ ăn/đồ uống với styling hiện đại
         if (!meals.isEmpty()) {
             TextView mealsHeader = new TextView(this);
-            mealsHeader.setText("🍽️ Bữa ăn & Đồ uống:");
-            mealsHeader.setTextSize(15f);
+            mealsHeader.setText("🍽️ Bữa ăn & Đồ uống");
+            mealsHeader.setTextSize(16f);
             mealsHeader.setTypeface(null, android.graphics.Typeface.BOLD);
             mealsHeader.setTextColor(getResources().getColor(android.R.color.black));
-            mealsHeader.setPadding(0, 8, 0, 8);
+            mealsHeader.setPadding(0, 4, 0, 12);
             servicesContainer.addView(mealsHeader);
 
             for (com.prm.flightbooking.dto.service.BookingServiceDto service : meals) {
                 if (service.getMeal() != null) {
-                    TextView mealItem = new TextView(this);
-                    StringBuilder mealInfo = new StringBuilder();
-                    mealInfo.append("  • ").append(service.getMeal().getMealName());
-                    // Hiển thị loại (đồ ăn/đồ uống) nếu có
+                    LinearLayout mealItemLayout = new LinearLayout(this);
+                    mealItemLayout.setOrientation(LinearLayout.HORIZONTAL);
+                    mealItemLayout.setPadding(0, 8, 0, 8);
+                    mealItemLayout.setGravity(android.view.Gravity.CENTER_VERTICAL);
+
+                    // Icon bullet point
+                    TextView bullet = new TextView(this);
+                    bullet.setText("•");
+                    bullet.setTextSize(18f);
+                    bullet.setTextColor(0xFF6C5CE7);
+                    bullet.setPadding(0, 0, 12, 0);
+                    mealItemLayout.addView(bullet);
+
+                    // Service info
+                    LinearLayout infoLayout = new LinearLayout(this);
+                    infoLayout.setOrientation(LinearLayout.VERTICAL);
+                    infoLayout.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+                    TextView mealName = new TextView(this);
+                    mealName.setText(service.getMeal().getMealName());
+                    mealName.setTextSize(14f);
+                    mealName.setTextColor(getResources().getColor(android.R.color.black));
+                    mealName.setTypeface(null, android.graphics.Typeface.BOLD);
+                    infoLayout.addView(mealName);
+
+                    TextView mealDetails = new TextView(this);
+                    StringBuilder details = new StringBuilder();
                     if (service.getMeal().getMealType() != null && !service.getMeal().getMealType().isEmpty()) {
-                        mealInfo.append(" - ").append(service.getMeal().getMealType());
+                        details.append(service.getMeal().getMealType());
                     }
-                    // Hiển thị số lượng và giá
-                    mealInfo.append(" (Số lượng: ").append(service.getQuantity()).append(")");
-                    // Kiểm tra nếu dịch vụ free (giá = 0)
+                    details.append(" • Số lượng: ").append(service.getQuantity());
+                    mealDetails.setText(details.toString());
+                    mealDetails.setTextSize(12f);
+                    mealDetails.setTextColor(0xFF666666);
+                    mealDetails.setPadding(0, 2, 0, 0);
+                    infoLayout.addView(mealDetails);
+
+                    mealItemLayout.addView(infoLayout);
+
+                    // Price
+                    TextView priceText = new TextView(this);
                     if (service.getPrice() != null && service.getPrice().compareTo(BigDecimal.ZERO) == 0) {
-                        mealInfo.append(" - Miễn phí");
+                        priceText.setText("Miễn phí");
+                        priceText.setTextColor(0xFF4CAF50);
                     } else {
-                    BigDecimal totalPrice = service.getPrice().multiply(new BigDecimal(service.getQuantity()));
-                    mealInfo.append(" - ").append(currencyFormat.format(totalPrice)).append(" VND");
+                        BigDecimal totalPrice = service.getPrice().multiply(new BigDecimal(service.getQuantity()));
+                        priceText.setText(currencyFormat.format(totalPrice) + " VND");
+                        priceText.setTextColor(0xFF6C5CE7);
                     }
-                    mealItem.setText(mealInfo.toString());
-                    mealItem.setTextSize(13f);
-                    mealItem.setTextColor(getResources().getColor(android.R.color.black));
-                    mealItem.setPadding(16, 4, 0, 4);
-                    servicesContainer.addView(mealItem);
+                    priceText.setTextSize(14f);
+                    priceText.setTypeface(null, android.graphics.Typeface.BOLD);
+                    mealItemLayout.addView(priceText);
+
+                    servicesContainer.addView(mealItemLayout);
                 }
             }
         }
 
-        // Hiển thị hành lý
+        // Hiển thị hành lý với styling hiện đại
         if (!luggages.isEmpty()) {
             TextView luggageHeader = new TextView(this);
-            luggageHeader.setText("🧳 Hành lý:");
-            luggageHeader.setTextSize(15f);
+            luggageHeader.setText("🧳 Hành lý");
+            luggageHeader.setTextSize(16f);
             luggageHeader.setTypeface(null, android.graphics.Typeface.BOLD);
             luggageHeader.setTextColor(getResources().getColor(android.R.color.black));
-            luggageHeader.setPadding(0, 12, 0, 8);
+            luggageHeader.setPadding(0, 16, 0, 12);
             servicesContainer.addView(luggageHeader);
 
             for (com.prm.flightbooking.dto.service.BookingServiceDto service : luggages) {
                 if (service.getLuggage() != null) {
-                    TextView luggageItem = new TextView(this);
-                    StringBuilder luggageInfo = new StringBuilder();
-                    luggageInfo.append("  • ").append(service.getLuggage().getLuggageName());
-                    // Hiển thị trọng lượng
+                    LinearLayout luggageItemLayout = new LinearLayout(this);
+                    luggageItemLayout.setOrientation(LinearLayout.HORIZONTAL);
+                    luggageItemLayout.setPadding(0, 8, 0, 8);
+                    luggageItemLayout.setGravity(android.view.Gravity.CENTER_VERTICAL);
+
+                    // Icon bullet point
+                    TextView bullet = new TextView(this);
+                    bullet.setText("•");
+                    bullet.setTextSize(18f);
+                    bullet.setTextColor(0xFF6C5CE7);
+                    bullet.setPadding(0, 0, 12, 0);
+                    luggageItemLayout.addView(bullet);
+
+                    // Service info
+                    LinearLayout infoLayout = new LinearLayout(this);
+                    infoLayout.setOrientation(LinearLayout.VERTICAL);
+                    infoLayout.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+                    TextView luggageName = new TextView(this);
+                    luggageName.setText(service.getLuggage().getLuggageName());
+                    luggageName.setTextSize(14f);
+                    luggageName.setTextColor(getResources().getColor(android.R.color.black));
+                    luggageName.setTypeface(null, android.graphics.Typeface.BOLD);
+                    infoLayout.addView(luggageName);
+
+                    TextView luggageDetails = new TextView(this);
+                    StringBuilder details = new StringBuilder();
                     if (service.getLuggage().getWeightLimit() != null) {
-                        luggageInfo.append(" - ").append(service.getLuggage().getWeightLimit()).append(" kg");
+                        details.append(service.getLuggage().getWeightLimit()).append(" kg");
                     }
-                    // Hiển thị loại hành lý
                     if (service.getLuggage().getLuggageType() != null && !service.getLuggage().getLuggageType().isEmpty()) {
-                        luggageInfo.append(" (").append(service.getLuggage().getLuggageType()).append(")");
+                        if (details.length() > 0) details.append(" • ");
+                        details.append(service.getLuggage().getLuggageType());
                     }
-                    // Hiển thị số lượng và giá
-                    luggageInfo.append(" (Số lượng: ").append(service.getQuantity()).append(")");
-                    // Kiểm tra nếu dịch vụ free (giá = 0)
+                    details.append(" • Số lượng: ").append(service.getQuantity());
+                    luggageDetails.setText(details.toString());
+                    luggageDetails.setTextSize(12f);
+                    luggageDetails.setTextColor(0xFF666666);
+                    luggageDetails.setPadding(0, 2, 0, 0);
+                    infoLayout.addView(luggageDetails);
+
+                    luggageItemLayout.addView(infoLayout);
+
+                    // Price
+                    TextView priceText = new TextView(this);
                     if (service.getPrice() != null && service.getPrice().compareTo(BigDecimal.ZERO) == 0) {
-                        luggageInfo.append(" - Miễn phí");
+                        priceText.setText("Miễn phí");
+                        priceText.setTextColor(0xFF4CAF50);
                     } else {
-                    BigDecimal totalPrice = service.getPrice().multiply(new BigDecimal(service.getQuantity()));
-                    luggageInfo.append(" - ").append(currencyFormat.format(totalPrice)).append(" VND");
+                        BigDecimal totalPrice = service.getPrice().multiply(new BigDecimal(service.getQuantity()));
+                        priceText.setText(currencyFormat.format(totalPrice) + " VND");
+                        priceText.setTextColor(0xFF6C5CE7);
                     }
-                    luggageItem.setText(luggageInfo.toString());
-                    luggageItem.setTextSize(13f);
-                    luggageItem.setTextColor(getResources().getColor(android.R.color.black));
-                    luggageItem.setPadding(16, 4, 0, 4);
-                    servicesContainer.addView(luggageItem);
+                    priceText.setTextSize(14f);
+                    priceText.setTypeface(null, android.graphics.Typeface.BOLD);
+                    luggageItemLayout.addView(priceText);
+
+                    servicesContainer.addView(luggageItemLayout);
                 }
             }
         }
 
-        // Hiển thị bảo hiểm
+        // Hiển thị bảo hiểm với styling hiện đại
         if (!insurances.isEmpty()) {
             TextView insuranceHeader = new TextView(this);
-            insuranceHeader.setText("🛡️ Bảo hiểm:");
-            insuranceHeader.setTextSize(15f);
+            insuranceHeader.setText("🛡️ Bảo hiểm");
+            insuranceHeader.setTextSize(16f);
             insuranceHeader.setTypeface(null, android.graphics.Typeface.BOLD);
             insuranceHeader.setTextColor(getResources().getColor(android.R.color.black));
-            insuranceHeader.setPadding(0, 12, 0, 8);
+            insuranceHeader.setPadding(0, 16, 0, 12);
             servicesContainer.addView(insuranceHeader);
 
             for (com.prm.flightbooking.dto.service.BookingServiceDto service : insurances) {
                 if (service.getInsurance() != null) {
-                    TextView insuranceItem = new TextView(this);
-                    StringBuilder insuranceInfo = new StringBuilder();
-                    insuranceInfo.append("  • ").append(service.getInsurance().getInsuranceName());
-                    // Hiển thị loại bảo hiểm
+                    LinearLayout insuranceItemLayout = new LinearLayout(this);
+                    insuranceItemLayout.setOrientation(LinearLayout.HORIZONTAL);
+                    insuranceItemLayout.setPadding(0, 8, 0, 8);
+                    insuranceItemLayout.setGravity(android.view.Gravity.CENTER_VERTICAL);
+
+                    // Icon bullet point
+                    TextView bullet = new TextView(this);
+                    bullet.setText("•");
+                    bullet.setTextSize(18f);
+                    bullet.setTextColor(0xFF6C5CE7);
+                    bullet.setPadding(0, 0, 12, 0);
+                    insuranceItemLayout.addView(bullet);
+
+                    // Service info
+                    LinearLayout infoLayout = new LinearLayout(this);
+                    infoLayout.setOrientation(LinearLayout.VERTICAL);
+                    infoLayout.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+                    TextView insuranceName = new TextView(this);
+                    insuranceName.setText(service.getInsurance().getInsuranceName());
+                    insuranceName.setTextSize(14f);
+                    insuranceName.setTextColor(getResources().getColor(android.R.color.black));
+                    insuranceName.setTypeface(null, android.graphics.Typeface.BOLD);
+                    infoLayout.addView(insuranceName);
+
+                    TextView insuranceDetails = new TextView(this);
+                    StringBuilder details = new StringBuilder();
                     if (service.getInsurance().getInsuranceType() != null && !service.getInsurance().getInsuranceType().isEmpty()) {
                         String typeName = "";
                         switch (service.getInsurance().getInsuranceType().toUpperCase()) {
@@ -855,22 +968,32 @@ public class BookingDetailActivity extends AppCompatActivity {
                             case "VIP": typeName = "Hạng VIP"; break;
                             default: typeName = service.getInsurance().getInsuranceType();
                         }
-                        insuranceInfo.append(" (").append(typeName).append(")");
+                        details.append(typeName);
                     }
-                    // Hiển thị số lượng và giá
-                    insuranceInfo.append(" (Số lượng: ").append(service.getQuantity()).append(")");
-                    // Kiểm tra nếu dịch vụ free (giá = 0)
+                    details.append(" • Số lượng: ").append(service.getQuantity());
+                    insuranceDetails.setText(details.toString());
+                    insuranceDetails.setTextSize(12f);
+                    insuranceDetails.setTextColor(0xFF666666);
+                    insuranceDetails.setPadding(0, 2, 0, 0);
+                    infoLayout.addView(insuranceDetails);
+
+                    insuranceItemLayout.addView(infoLayout);
+
+                    // Price
+                    TextView priceText = new TextView(this);
                     if (service.getPrice() != null && service.getPrice().compareTo(BigDecimal.ZERO) == 0) {
-                        insuranceInfo.append(" - Miễn phí");
+                        priceText.setText("Miễn phí");
+                        priceText.setTextColor(0xFF4CAF50);
                     } else {
-                    BigDecimal totalPrice = service.getPrice().multiply(new BigDecimal(service.getQuantity()));
-                    insuranceInfo.append(" - ").append(currencyFormat.format(totalPrice)).append(" VND");
+                        BigDecimal totalPrice = service.getPrice().multiply(new BigDecimal(service.getQuantity()));
+                        priceText.setText(currencyFormat.format(totalPrice) + " VND");
+                        priceText.setTextColor(0xFF6C5CE7);
                     }
-                    insuranceItem.setText(insuranceInfo.toString());
-                    insuranceItem.setTextSize(13f);
-                    insuranceItem.setTextColor(getResources().getColor(android.R.color.black));
-                    insuranceItem.setPadding(16, 4, 0, 4);
-                    servicesContainer.addView(insuranceItem);
+                    priceText.setTextSize(14f);
+                    priceText.setTypeface(null, android.graphics.Typeface.BOLD);
+                    insuranceItemLayout.addView(priceText);
+
+                    servicesContainer.addView(insuranceItemLayout);
                 }
             }
         }

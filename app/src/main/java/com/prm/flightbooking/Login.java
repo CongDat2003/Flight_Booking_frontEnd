@@ -39,6 +39,9 @@ public class Login extends AppCompatActivity {
 
         bindingView();
         bindingAction();
+        
+        // Kiểm tra và tự động điền thông tin đăng ký mới
+        autoFillRegisteredCredentials();
     }
 
     private void bindingView() {
@@ -64,6 +67,28 @@ public class Login extends AppCompatActivity {
     private void onTvSignUpClick(View view) {
         Intent intent = new Intent(Login.this, Signup.class);
         startActivity(intent);
+    }
+    
+    // Tự động điền thông tin đăng ký mới vào form đăng nhập
+    private void autoFillRegisteredCredentials() {
+        Intent intent = getIntent();
+        if (intent != null) {
+            String registeredUsername = intent.getStringExtra("registered_username");
+            String registeredPassword = intent.getStringExtra("registered_password");
+            
+            if (registeredUsername != null && !registeredUsername.isEmpty()) {
+                etUsernameOrEmail.setText(registeredUsername);
+            }
+            
+            if (registeredPassword != null && !registeredPassword.isEmpty()) {
+                etPassword.setText(registeredPassword);
+            }
+            
+            // Hiển thị thông báo nếu có thông tin đăng ký mới
+            if (registeredUsername != null && registeredPassword != null) {
+                Toast.makeText(this, "Thông tin đăng nhập đã được điền sẵn", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     // Chuyển sang màn hình quên mật khẩu

@@ -318,30 +318,50 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Passenger Information -->
+            <!-- Passenger Information - Modern Redesign -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
                 android:layout_marginBottom="20dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="6dp"
+                app:cardBackgroundColor="#FFFFFF">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="24dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <!-- Header with modern styling -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="👤 Thông tin hành khách"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#1A1A1A"
-                        android:layout_marginBottom="16dp"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="20dp">
 
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="👤 Thông tin hành khách"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#1A1A1A"
+                            android:drawableStart="@android:drawable/ic_menu_myplaces"
+                            android:drawablePadding="8dp"
+                            android:gravity="center_vertical" />
+
+                        <View
+                            android:layout_width="4dp"
+                            android:layout_height="24dp"
+                            android:background="#6C5CE7"
+                            android:layout_marginEnd="8dp" />
+                    </LinearLayout>
+
+                    <!-- Passenger container with modern spacing -->
                     <LinearLayout
                         android:id="@+id/passenger_container"
                         android:layout_width="match_parent"
@@ -352,35 +372,65 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Services Information -->
+            <!-- Services Information - Modern Redesign -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="20dp"
                 android:layout_marginBottom="20dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="6dp"
+                app:cardBackgroundColor="#FFFFFF">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="24dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🎁 Dịch vụ đã chọn"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#1A1A1A"
-                        android:layout_marginBottom="16dp"/>
-
+                    <!-- Header with modern styling -->
                     <LinearLayout
-                        android:id="@+id/services_container"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="20dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="🎁 Dịch vụ đã chọn"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#1A1A1A"
+                            android:drawableStart="@android:drawable/ic_menu_agenda"
+                            android:drawablePadding="8dp"
+                            android:gravity="center_vertical" />
+
+                        <View
+                            android:layout_width="4dp"
+                            android:layout_height="24dp"
+                            android:background="#6C5CE7"
+                            android:layout_marginEnd="8dp" />
+                    </LinearLayout>
+
+                    <!-- Services container with modern background -->
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="2dp"
+                        app:cardBackgroundColor="#F8F9FA">
+
+                        <LinearLayout
+                            android:id="@+id/services_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="16dp"/>
+
+                    </androidx.cardview.widget.CardView>
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

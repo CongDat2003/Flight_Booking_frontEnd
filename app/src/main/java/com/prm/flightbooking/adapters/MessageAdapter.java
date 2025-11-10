@@ -67,10 +67,11 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             layoutAdminMessage = itemView.findViewById(R.id.layout_admin_message);
             tvUserContent = itemView.findViewById(R.id.tv_user_content);
             tvUserTime = itemView.findViewById(R.id.tv_user_time);
-            tvAdminSender = itemView.findViewById(R.id.tv_admin_sender);
+            // Các view này không có trong layout hiện tại, set null
+            tvAdminSender = null; // itemView.findViewById(R.id.tv_admin_sender);
             tvAdminContent = itemView.findViewById(R.id.tv_admin_content);
             tvAdminTime = itemView.findViewById(R.id.tv_admin_time);
-            tvAutoReplyBadge = itemView.findViewById(R.id.tv_auto_reply_badge);
+            tvAutoReplyBadge = null; // itemView.findViewById(R.id.tv_auto_reply_badge);
         }
 
         public void bind(MessageDto message) {
@@ -87,12 +88,15 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                 layoutUserMessage.setVisibility(View.GONE);
                 layoutAdminMessage.setVisibility(View.VISIBLE);
                 
-                if (message.isFromAdmin()) {
-                    tvAdminSender.setText("Admin");
-                    tvAdminSender.setVisibility(View.VISIBLE);
-                } else {
-                    tvAdminSender.setText("Hệ thống");
-                    tvAdminSender.setVisibility(View.VISIBLE);
+                // tvAdminSender không có trong layout, bỏ qua
+                if (tvAdminSender != null) {
+                    if (message.isFromAdmin()) {
+                        tvAdminSender.setText("Admin");
+                        tvAdminSender.setVisibility(View.VISIBLE);
+                    } else {
+                        tvAdminSender.setText("Hệ thống");
+                        tvAdminSender.setVisibility(View.VISIBLE);
+                    }
                 }
                 
                 tvAdminContent.setText(message.getContent());
@@ -101,10 +105,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                 }
                 
                 // Hiển thị badge auto-reply nếu là tin nhắn tự động
-                if (message.isAutoReply()) {
-                    tvAutoReplyBadge.setVisibility(View.VISIBLE);
-                } else {
-                    tvAutoReplyBadge.setVisibility(View.GONE);
+                if (tvAutoReplyBadge != null) {
+                    if (message.isAutoReply()) {
+                        tvAutoReplyBadge.setVisibility(View.VISIBLE);
+                    } else {
+                        tvAutoReplyBadge.setVisibility(View.GONE);
+                    }
                 }
             }
         }
